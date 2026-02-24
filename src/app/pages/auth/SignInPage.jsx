@@ -18,7 +18,7 @@ export function SignInPage() {
   const { login } = useAuth();
   const { t } = useLanguage();
 
-  const ROLES = ROLE_CONFIGS.map((r) => ({ ...r, label: t.auth.roles[r.id.auth.roles] }));
+  const ROLES = ROLE_CONFIGS.map((r) => ({ ...r, label: t.auth.roles[r.id] }));
 
   const [selectedRole, setSelectedRole] = useState(null);
   const [email, setEmail]       = useState('');
