@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { User } from '../App';
+import type { User } from '../../types';
 import { DashboardLayout } from './DashboardLayout';
 import { Flag, CheckCircle, XCircle, Eye, MessageSquare, AlertTriangle } from 'lucide-react';
 
@@ -87,7 +87,7 @@ export function ModeratorDashboard({ user, onLogout }: ModeratorDashboardProps) 
       case 'issue':
         return 'bg-blue-100 text-blue-800';
       case 'comment':
-        return 'bg-purple-100 text-purple-800';
+        return 'bg-orange-100 text-[#FF9933]';
       case 'announcement':
         return 'bg-green-100 text-green-800';
       default:
@@ -128,7 +128,7 @@ export function ModeratorDashboard({ user, onLogout }: ModeratorDashboardProps) 
           onClick={() => setActiveTab('flagged')}
           className={`pb-4 px-4 font-medium transition-colors ${
             activeTab === 'flagged'
-              ? 'border-b-2 border-indigo-600 text-indigo-600'
+              ? 'border-b-2 border-[#FF9933] text-[#FF9933]'
               : 'text-gray-500 hover:text-gray-700'
           }`}
         >
@@ -138,7 +138,7 @@ export function ModeratorDashboard({ user, onLogout }: ModeratorDashboardProps) 
           onClick={() => setActiveTab('activity')}
           className={`pb-4 px-4 font-medium transition-colors ${
             activeTab === 'activity'
-              ? 'border-b-2 border-indigo-600 text-indigo-600'
+              ? 'border-b-2 border-[#FF9933] text-[#FF9933]'
               : 'text-gray-500 hover:text-gray-700'
           }`}
         >

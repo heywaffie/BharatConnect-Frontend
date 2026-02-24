@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { User } from '../App';
+import type { User } from '../../types';
 import { DashboardLayout } from './DashboardLayout';
 import { AlertTriangle, MessageSquare, Send, Megaphone, TrendingUp, Users } from 'lucide-react';
-import { AnnouncementModal } from './AnnouncementModal';
+import { AnnouncementModal } from '../modals/AnnouncementModal';
 
 interface PoliticianDashboardProps {
   user: User;
@@ -174,7 +174,7 @@ export function PoliticianDashboard({ user, onLogout }: PoliticianDashboardProps
         </div>
         <button
           onClick={() => setShowAnnouncementModal(true)}
-          className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center"
+          className="px-4 py-2 bg-[#FF9933] text-white rounded-lg hover:bg-[#e8871e] transition-colors flex items-center"
         >
           <Megaphone className="w-5 h-5 mr-2" />
           New Announcement
@@ -192,7 +192,7 @@ export function PoliticianDashboard({ user, onLogout }: PoliticianDashboardProps
                   <p className="text-sm text-gray-600 mb-1">{stat.label}</p>
                   <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
                 </div>
-                <Icon className="w-8 h-8 text-purple-600" />
+                <Icon className="w-8 h-8 text-[#FF9933]" />
               </div>
             </div>
           );
@@ -205,7 +205,7 @@ export function PoliticianDashboard({ user, onLogout }: PoliticianDashboardProps
           onClick={() => setActiveTab('issues')}
           className={`pb-4 px-4 font-medium transition-colors ${
             activeTab === 'issues'
-              ? 'border-b-2 border-indigo-600 text-indigo-600'
+              ? 'border-b-2 border-[#FF9933] text-[#FF9933]'
               : 'text-gray-500 hover:text-gray-700'
           }`}
         >
@@ -215,7 +215,7 @@ export function PoliticianDashboard({ user, onLogout }: PoliticianDashboardProps
           onClick={() => setActiveTab('announcements')}
           className={`pb-4 px-4 font-medium transition-colors ${
             activeTab === 'announcements'
-              ? 'border-b-2 border-indigo-600 text-indigo-600'
+              ? 'border-b-2 border-[#FF9933] text-[#FF9933]'
               : 'text-gray-500 hover:text-gray-700'
           }`}
         >
@@ -248,7 +248,7 @@ export function PoliticianDashboard({ user, onLogout }: PoliticianDashboardProps
                   <select
                     value={issue.status}
                     onChange={(e) => handleStatusChange(issue.id, e.target.value as any)}
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FF9933] focus:border-transparent"
                   >
                     <option value="pending">Pending</option>
                     <option value="in-progress">In Progress</option>
@@ -263,10 +263,10 @@ export function PoliticianDashboard({ user, onLogout }: PoliticianDashboardProps
                   <h4 className="font-medium text-gray-900 mb-3">Responses</h4>
                   <div className="space-y-3">
                     {issue.responses.map((response) => (
-                      <div key={response.id} className="bg-purple-50 rounded-lg p-4">
+                      <div key={response.id} className="bg-orange-50 rounded-lg p-4">
                         <div className="flex items-center justify-between mb-2">
-                          <span className="font-medium text-purple-900">{response.author}</span>
-                          <span className="text-sm text-purple-600">{new Date(response.date).toLocaleDateString()}</span>
+                          <span className="font-medium text-gray-900">{response.author}</span>
+                          <span className="text-sm text-[#FF9933]">{new Date(response.date).toLocaleDateString()}</span>
                         </div>
                         <p className="text-gray-700">{response.content}</p>
                       </div>
@@ -282,7 +282,7 @@ export function PoliticianDashboard({ user, onLogout }: PoliticianDashboardProps
                     value={responseText}
                     onChange={(e) => setResponseText(e.target.value)}
                     placeholder="Write your response..."
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FF9933] focus:border-transparent resize-none"
                     rows={3}
                   />
                   <div className="flex justify-end space-x-2 mt-2">
@@ -297,7 +297,7 @@ export function PoliticianDashboard({ user, onLogout }: PoliticianDashboardProps
                     </button>
                     <button
                       onClick={() => handleAddResponse(issue.id)}
-                      className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center"
+                      className="px-4 py-2 bg-[#FF9933] text-white rounded-lg hover:bg-[#e8871e] transition-colors flex items-center"
                     >
                       <Send className="w-4 h-4 mr-2" />
                       Send Response
@@ -307,7 +307,7 @@ export function PoliticianDashboard({ user, onLogout }: PoliticianDashboardProps
               ) : (
                 <button
                   onClick={() => setSelectedIssue(issue.id)}
-                  className="mt-4 px-4 py-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors flex items-center"
+                  className="mt-4 px-4 py-2 text-[#FF9933] hover:bg-orange-50 rounded-lg transition-colors flex items-center"
                 >
                   <MessageSquare className="w-4 h-4 mr-2" />
                   Add Response

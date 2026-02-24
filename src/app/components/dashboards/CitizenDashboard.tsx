@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { User } from '../App';
+import type { User } from '../../types';
 import { DashboardLayout } from './DashboardLayout';
 import { Plus, MessageSquare, CheckCircle, Clock, AlertTriangle, Megaphone } from 'lucide-react';
-import { IssueReportModal } from './IssueReportModal';
-import { FeedbackModal } from './FeedbackModal';
+import { IssueReportModal } from '../modals/IssueReportModal';
+import { FeedbackModal } from '../modals/FeedbackModal';
 
 interface CitizenDashboardProps {
   user: User;
@@ -147,14 +147,14 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
         <div className="flex space-x-3">
           <button
             onClick={() => setShowFeedbackModal(true)}
-            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center"
+            className="px-4 py-2 bg-[#138808] text-white rounded-lg hover:bg-[#0f6506] transition-colors flex items-center"
           >
             <MessageSquare className="w-5 h-5 mr-2" />
             Give Feedback
           </button>
           <button
             onClick={() => setShowIssueModal(true)}
-            className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center"
+            className="px-4 py-2 bg-[#FF9933] text-white rounded-lg hover:bg-[#e8871e] transition-colors flex items-center"
           >
             <Plus className="w-5 h-5 mr-2" />
             Report Issue
@@ -168,7 +168,7 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
           onClick={() => setActiveTab('my-issues')}
           className={`pb-4 px-4 font-medium transition-colors ${
             activeTab === 'my-issues'
-              ? 'border-b-2 border-indigo-600 text-indigo-600'
+              ? 'border-b-2 border-[#FF9933] text-[#FF9933]'
               : 'text-gray-500 hover:text-gray-700'
           }`}
         >
@@ -178,7 +178,7 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
           onClick={() => setActiveTab('updates')}
           className={`pb-4 px-4 font-medium transition-colors ${
             activeTab === 'updates'
-              ? 'border-b-2 border-indigo-600 text-indigo-600'
+              ? 'border-b-2 border-[#FF9933] text-[#FF9933]'
               : 'text-gray-500 hover:text-gray-700'
           }`}
         >
@@ -232,8 +232,8 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
           {updates.map((update) => (
             <div key={update.id} className="bg-white rounded-lg shadow p-6 hover:shadow-md transition-shadow">
               <div className="flex items-start space-x-4">
-                <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <Megaphone className="w-6 h-6 text-purple-600" />
+                <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <Megaphone className="w-6 h-6 text-[#FF9933]" />
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-2">

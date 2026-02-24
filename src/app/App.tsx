@@ -1,86 +1,92 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router';
-import { useState } from 'react';
-import { LandingPage } from './components/LandingPage';
-import { AdminDashboard } from './components/AdminDashboard';
-import { CitizenDashboard } from './components/CitizenDashboard';
-import { PoliticianDashboard } from './components/PoliticianDashboard';
-import { ModeratorDashboard } from './components/ModeratorDashboard';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { LanguageProvider } from './context/LanguageContext';
+import { LandingPage } from './pages/LandingPage';
+import { SignInPage } from './pages/auth/SignInPage';
+import { SignUpPage } from './pages/auth/SignUpPage';
+import { AdminDashboard } from './components/dashboards/AdminDashboard';
+import { CitizenDashboard } from './components/dashboards/CitizenDashboard';
+import { PoliticianDashboard } from './components/dashboards/PoliticianDashboard';
+import { ModeratorDashboard } from './components/dashboards/ModeratorDashboard';
 
-export type UserRole = 'admin' | 'citizen' | 'politician' | 'moderator' | null;
+// Re-export types so other modules that still use './App' continue to work
+export type { UserRole, User } from './types';
 
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: UserRole;
-  avatar?: string;
+function AppRoutes() {
+  const { user, logout } = useAuth();
+
+  return (
+    <Routes>
+      {/* Public routes */}
+      <Route
+        path="/"
+        element={user ? <Navigate to={`/${user.role}`} replace /> : <LandingPage />}
+      />
+      <Route
+        path="/signin"
+        element={user ? <Navigate to={`/${user.role}`} replace /> : <SignInPage />}
+      />
+      <Route
+        path="/signup"
+        element={user ? <Navigate to={`/${user.role}`} replace /> : <SignUpPage />}
+      />
+
+      {/* Protected dashboard routes */}
+      <Route
+        path="/admin"
+        element={
+          user?.role === 'admin' ? (
+            <AdminDashboard user={user} onLogout={logout} />
+          ) : (
+            <Navigate to="/signin" replace />
+          )
+        }
+      />
+      <Route
+        path="/citizen"
+        element={
+          user?.role === 'citizen' ? (
+            <CitizenDashboard user={user} onLogout={logout} />
+          ) : (
+            <Navigate to="/signin" replace />
+          )
+        }
+      />
+      <Route
+        path="/politician"
+        element={
+          user?.role === 'politician' ? (
+            <PoliticianDashboard user={user} onLogout={logout} />
+          ) : (
+            <Navigate to="/signin" replace />
+          )
+        }
+      />
+      <Route
+        path="/moderator"
+        element={
+          user?.role === 'moderator' ? (
+            <ModeratorDashboard user={user} onLogout={logout} />
+          ) : (
+            <Navigate to="/signin" replace />
+          )
+        }
+      />
+
+      {/* Fallback */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
 }
 
 function App() {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-
-  const handleLogin = (user: User) => {
-    setCurrentUser(user);
-  };
-
-  const handleLogout = () => {
-    setCurrentUser(null);
-  };
-
   return (
     <BrowserRouter>
-      <Routes>
-        <Route 
-          path="/" 
-          element={
-            currentUser ? (
-              <Navigate to={`/${currentUser.role}`} replace />
-            ) : (
-              <LandingPage onLogin={handleLogin} />
-            )
-          } 
-        />
-        <Route 
-          path="/admin" 
-          element={
-            currentUser?.role === 'admin' ? (
-              <AdminDashboard user={currentUser} onLogout={handleLogout} />
-            ) : (
-              <Navigate to="/" replace />
-            )
-          } 
-        />
-        <Route 
-          path="/citizen" 
-          element={
-            currentUser?.role === 'citizen' ? (
-              <CitizenDashboard user={currentUser} onLogout={handleLogout} />
-            ) : (
-              <Navigate to="/" replace />
-            )
-          } 
-        />
-        <Route 
-          path="/politician" 
-          element={
-            currentUser?.role === 'politician' ? (
-              <PoliticianDashboard user={currentUser} onLogout={handleLogout} />
-            ) : (
-              <Navigate to="/" replace />
-            )
-          } 
-        />
-        <Route 
-          path="/moderator" 
-          element={
-            currentUser?.role === 'moderator' ? (
-              <ModeratorDashboard user={currentUser} onLogout={handleLogout} />
-            ) : (
-              <Navigate to="/" replace />
-            )
-          } 
-        />
-      </Routes>
+      <LanguageProvider>
+        <AuthProvider>
+          <AppRoutes />
+        </AuthProvider>
+      </LanguageProvider>
     </BrowserRouter>
   );
 }

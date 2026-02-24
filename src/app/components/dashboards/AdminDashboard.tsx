@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { User } from '../App';
+import type { User } from '../../types';
 import { DashboardLayout } from './DashboardLayout';
 import { Users, Shield, Activity, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
@@ -30,8 +30,8 @@ export function AdminDashboard({ user, onLogout }: AdminDashboardProps) {
   ];
 
   const usersByRole = [
-    { name: 'Citizens', value: 980, color: '#3B82F6' },
-    { name: 'Politicians', value: 45, color: '#A855F7' },
+    { name: 'Citizens', value: 980, color: '#FF9933' },
+    { name: 'Politicians', value: 45, color: '#138808' },
     { name: 'Moderators', value: 25, color: '#10B981' },
     { name: 'Admins', value: 5, color: '#EF4444' },
   ];
@@ -74,7 +74,7 @@ export function AdminDashboard({ user, onLogout }: AdminDashboardProps) {
           onClick={() => setActiveTab('overview')}
           className={`pb-4 px-4 font-medium transition-colors ${
             activeTab === 'overview'
-              ? 'border-b-2 border-indigo-600 text-indigo-600'
+              ? 'border-b-2 border-[#FF9933] text-[#FF9933]'
               : 'text-gray-500 hover:text-gray-700'
           }`}
         >
@@ -84,7 +84,7 @@ export function AdminDashboard({ user, onLogout }: AdminDashboardProps) {
           onClick={() => setActiveTab('users')}
           className={`pb-4 px-4 font-medium transition-colors ${
             activeTab === 'users'
-              ? 'border-b-2 border-indigo-600 text-indigo-600'
+              ? 'border-b-2 border-[#FF9933] text-[#FF9933]'
               : 'text-gray-500 hover:text-gray-700'
           }`}
         >
@@ -94,7 +94,7 @@ export function AdminDashboard({ user, onLogout }: AdminDashboardProps) {
           onClick={() => setActiveTab('analytics')}
           className={`pb-4 px-4 font-medium transition-colors ${
             activeTab === 'analytics'
-              ? 'border-b-2 border-indigo-600 text-indigo-600'
+              ? 'border-b-2 border-[#FF9933] text-[#FF9933]'
               : 'text-gray-500 hover:text-gray-700'
           }`}
         >
@@ -128,7 +128,7 @@ export function AdminDashboard({ user, onLogout }: AdminDashboardProps) {
           {/* Recent Activity */}
           <div className="bg-white rounded-lg shadow p-6">
             <h3 className="text-xl font-semibold mb-4 flex items-center">
-              <Activity className="w-5 h-5 mr-2 text-indigo-600" />
+              <Activity className="w-5 h-5 mr-2 text-[#FF9933]" />
               Recent Platform Activity
             </h3>
             <div className="space-y-3">
@@ -188,7 +188,7 @@ export function AdminDashboard({ user, onLogout }: AdminDashboardProps) {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        userData.role === 'Politician' ? 'bg-purple-100 text-purple-800' :
+                        userData.role === 'Politician' ? 'bg-green-100 text-[#138808]' :
                         userData.role === 'Moderator' ? 'bg-green-100 text-green-800' :
                         'bg-blue-100 text-blue-800'
                       }`}>
