@@ -112,7 +112,7 @@ export function DashboardHome() {
             <Link
               key={item.key}
               to={item.to}
-              className="group rounded-2xl bg-white border border-gray-100 shadow-sm p-6 hover:border-[#FF9933] hover:shadow-md hover:-translate-y-0.5 transition"
+              className="group rounded-2xl bg-white border border-gray-100 shadow-sm p-6 hover:border-[#FF9933] hover:shadow-md hover:-translate-y-0.5 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#FF9933]"
             >
               <div className="w-12 h-12 rounded-xl bg-orange-100 text-[#FF9933] flex items-center justify-center mb-4">
                 <Icon className="w-6 h-6" />
