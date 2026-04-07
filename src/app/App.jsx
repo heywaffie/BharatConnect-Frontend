@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { LanguageProvider } from './context/LanguageContext';
 import { LandingPage } from './pages/LandingPage';
@@ -27,6 +27,11 @@ function AppRoutes() {
     if (isSuspended) return '/signin';
     if (user.onboardingCompleted === false) return '/onboarding';
     return '/dashboard';
+  };
+
+  const AliasRedirect = ({ to }) => {
+    const location = useLocation();
+    return <Navigate to={`${to}${location.search || ''}`} replace />;
   };
 
   return (
@@ -86,11 +91,11 @@ function AppRoutes() {
       />
       <Route
         path="/politicion"
-        element={<Navigate to="/politician" replace />}
+        element={<AliasRedirect to="/politician" />}
       />
       <Route
         path="/poicitfrn"
-        element={<Navigate to="/politician" replace />}
+        element={<AliasRedirect to="/politician" />}
       />
       <Route
         path="/moderator"
@@ -104,7 +109,7 @@ function AppRoutes() {
       />
       <Route
         path="/mod"
-        element={<Navigate to="/moderator" replace />}
+        element={<AliasRedirect to="/moderator" />}
       />
 
       {/* Fallback */}

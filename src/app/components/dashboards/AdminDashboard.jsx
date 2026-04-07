@@ -5,11 +5,13 @@ import { DashboardLayout } from './DashboardLayout';
 import { Users, Shield, Activity, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { LoadingSkeleton } from '../common/LoadingSkeleton';
+import { useLanguage } from '../../context/LanguageContext';
 import { api } from '../../lib/api';
 
 export function AdminDashboard({ user, onLogout }) {
   const location = useLocation();
   const navigate = useNavigate();
+  const { lang } = useLanguage();
   const [activeTab, setActiveTab] = useState('overview');
   const [users, setUsers] = useState([]);
   const [issues, setIssues] = useState([]);
@@ -120,6 +122,10 @@ export function AdminDashboard({ user, onLogout }) {
     }
   };
 
+  const locale = { EN: 'en-IN', HI: 'hi-IN', TE: 'te-IN', TA: 'ta-IN' }[lang] || 'en-IN';
+  const formatDate = (value) => new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(new Date(value));
+  const formatDateTime = (value) => new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
+
   return (
     <DashboardLayout user={user} onLogout={onLogout}>
       <div className="mb-8">
@@ -210,7 +216,7 @@ export function AdminDashboard({ user, onLogout }) {
                       <p className="text-sm text-gray-500">{activity.user}</p>
                     </div>
                   </div>
-                  <span className="text-sm text-gray-500">{new Date(activity.time).toLocaleString()}</span>
+                  <span className="text-sm text-gray-500">{formatDateTime(activity.time)}</span>
                 </div>
               ))}
               {recentActivity.length === 0 && <p className="text-sm text-gray-500">No activity available yet.</p>}
@@ -252,7 +258,7 @@ export function AdminDashboard({ user, onLogout }) {
                     }`}>
                       {status}
                     </span>
-                    <span className="text-gray-500">Joined {new Date(userData.createdAt).toLocaleDateString()}</span>
+                    <span className="text-gray-500">Joined {formatDate(userData.createdAt)}</span>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
                     {!isFixedAdmin && (
@@ -328,7 +334,7 @@ export function AdminDashboard({ user, onLogout }) {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(userData.createdAt).toLocaleDateString()}
+                      {formatDate(userData.createdAt)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       <div className="flex items-center gap-2">

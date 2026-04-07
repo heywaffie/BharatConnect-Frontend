@@ -5,9 +5,13 @@ import { Shield, UserRound, Users, Megaphone, Sparkles, Phone, Mail, CircleCheck
 import { DashboardLayout } from '../components/dashboards/DashboardLayout';
 import { SectionHeader } from '../components/common/SectionHeader';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
+import { useDashboardAnalytics } from '../hooks/useDashboardAnalytics';
 
 export function DashboardHome() {
   const { user, updateProfile, logout } = useAuth();
+  const { lang } = useLanguage();
+  const { trackEvent } = useDashboardAnalytics();
   const [panelQuery, setPanelQuery] = useState(() => localStorage.getItem('cc_dashboard_panel_query') || '');
   const [toast, setToast] = useState(null);
   const [compactMode, setCompactMode] = useState(() => localStorage.getItem('cc_dashboard_compact') === '1');
@@ -104,7 +108,10 @@ export function DashboardHome() {
         : { to: '/citizen?quick=complaint', label: 'Quick Complaint Entry' };
 
   const lastLoginDisplay = user.lastLoginAt
-    ? new Date(user.lastLoginAt).toLocaleString()
+    ? new Intl.DateTimeFormat(
+      { EN: 'en-IN', HI: 'hi-IN', TE: 'te-IN', TA: 'ta-IN' }[lang] || 'en-IN',
+      { dateStyle: 'medium', timeStyle: 'short' },
+    ).format(new Date(user.lastLoginAt))
     : 'First session';
 
   const buttonBase = 'inline-flex items-center justify-center gap-1.5 rounded-xl px-3.5 py-2.5 text-xs font-semibold transition';
@@ -152,6 +159,7 @@ export function DashboardHome() {
   const copyEmail = async () => {
     try {
       await navigator.clipboard.writeText(user.email);
+      trackEvent('copy_email', { role: user.role });
       showToast('success', 'Email copied to clipboard');
     } catch {
       showToast('error', 'Unable to copy email');
@@ -159,6 +167,7 @@ export function DashboardHome() {
   };
 
   const resetSearch = () => {
+    trackEvent('reset_panel_search', { role: user.role });
     setPanelQuery('');
     showToast('success', 'Panel search reset');
   };
@@ -180,6 +189,7 @@ export function DashboardHome() {
   };
 
   const openProfileModal = () => {
+    trackEvent('open_profile_modal', { role: user.role });
     setProfileName(user?.name || '');
     setProfilePhone(user?.phoneNumber || '');
     setProfileError('');
@@ -201,6 +211,7 @@ export function DashboardHome() {
     }
 
     updateProfile({ name: trimmedName, phoneNumber: trimmedPhone });
+    trackEvent('save_profile', { role: user.role });
     setShowProfileModal(false);
     showToast('success', 'Profile updated successfully');
   };
@@ -265,14 +276,14 @@ export function DashboardHome() {
         </div>
       )}
 
-      <div className="mb-6 md:mb-8 rounded-3xl border border-orange-100 bg-[radial-gradient(circle_at_0%_0%,#fff7ed_0%,#ffffff_42%,#f8fafc_100%)] p-4 sm:p-5 md:p-8 shadow-sm">
+      <section aria-labelledby="dashboard-welcome-heading" className="mb-6 md:mb-8 rounded-3xl border border-orange-100 bg-[radial-gradient(circle_at_0%_0%,#fff7ed_0%,#ffffff_42%,#f8fafc_100%)] p-4 sm:p-5 md:p-8 shadow-sm">
         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 md:gap-6">
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-xs font-semibold text-[#cc6f1c] mb-3">
               <Sparkles className="w-3.5 h-3.5" />
               Unified Dashboard Hub
             </div>
-            <h1 className="text-3xl md:text-4xl font-black tracking-tight text-gray-900">Welcome, {user.name}</h1>
+            <h1 id="dashboard-welcome-heading" className="text-3xl md:text-4xl font-black tracking-tight text-gray-900">Welcome, {user.name}</h1>
             <p className="text-gray-600 mt-2 max-w-2xl">
               Start from one place, then jump to the right workspace for your responsibilities.
             </p>
@@ -310,20 +321,28 @@ export function DashboardHome() {
             </button>
           </div>
         </div>
-      </div>
+      </section>
 
-      <div className="sticky top-20 z-20 mb-6 rounded-2xl border border-gray-100 bg-white/90 backdrop-blur px-3 py-3 shadow-sm">
+      <section aria-label="Dashboard quick actions" className="sticky top-20 z-20 mb-6 rounded-2xl border border-gray-100 bg-white/90 backdrop-blur px-3 py-3 shadow-sm">
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-xs font-semibold text-gray-500 mr-1">Quick Actions</span>
           <Link to="/dashboard" className={`${buttonBase} border border-gray-200 text-gray-700 hover:border-[#FF9933] hover:text-[#FF9933]`}>
             <LayoutGrid className="w-3.5 h-3.5" /> Refresh Hub
           </Link>
           {quickLinks[0] && (
-            <Link to={quickLinks[0].to} className={`${buttonBase} bg-[#FF9933] text-white hover:bg-[#e8871e]`}>
+            <Link
+              to={quickLinks[0].to}
+              onClick={() => trackEvent('open_primary_panel', { panel: quickLinks[0].key, role: user.role })}
+              className={`${buttonBase} bg-[#FF9933] text-white hover:bg-[#e8871e]`}
+            >
               Open Primary Panel
             </Link>
           )}
-          <Link to={roleQuickEntry.to} className={`${buttonBase} bg-[#138808] text-white hover:bg-[#0f6506]`}>
+          <Link
+            to={roleQuickEntry.to}
+            onClick={() => trackEvent('quick_entry', { role: user.role, target: roleQuickEntry.to })}
+            className={`${buttonBase} bg-[#138808] text-white hover:bg-[#0f6506]`}
+          >
             {roleQuickEntry.label}
           </Link>
           <button
@@ -355,7 +374,7 @@ export function DashboardHome() {
             {highContrast ? 'Normal Contrast' : 'High Contrast'}
           </button>
         </div>
-      </div>
+      </section>
 
       <div className="mb-6 rounded-2xl border border-blue-100 bg-blue-50/60 px-4 py-3 text-sm text-blue-900 flex items-start gap-2">
         <LockKeyhole className="w-4 h-4 mt-0.5" />
@@ -371,14 +390,14 @@ export function DashboardHome() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
+      <section aria-label="Dashboard summary stats" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
         {stats.map((item) => (
           <div key={item.label} className="cc-card p-4">
             <p className="text-xs uppercase tracking-wide text-gray-500 font-semibold">{item.label}</p>
             <p className="mt-2 text-lg font-bold text-gray-900">{item.value}</p>
           </div>
         ))}
-      </div>
+      </section>
 
       <div className="mb-5 flex flex-wrap gap-2">
         <span className="text-xs font-semibold text-gray-500 mt-1">Shortcuts</span>
@@ -386,6 +405,7 @@ export function DashboardHome() {
           <Link
             key={`shortcut-${item.key}`}
             to={item.to}
+            onClick={() => trackEvent('shortcut_open', { panel: item.key, role: user.role })}
             className={`${buttonBase} border border-gray-200 text-gray-700 hover:border-[#FF9933] hover:text-[#FF9933]`}
           >
             {item.label}
@@ -421,13 +441,14 @@ export function DashboardHome() {
         )}
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+      <section aria-label="Available role panels" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         {filteredLinks.map((item) => {
           const Icon = item.icon;
           return (
             <Link
               key={item.key}
               to={item.to}
+              onClick={() => trackEvent('panel_open', { panel: item.key, role: user.role, queryActive: Boolean(panelQuery.trim()) })}
               className="group cc-card cc-hover-lift p-5 md:p-6 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#FF9933]"
             >
               <div className="w-12 h-12 rounded-xl bg-orange-100 text-[#FF9933] flex items-center justify-center mb-4">
@@ -451,7 +472,7 @@ export function DashboardHome() {
             <p className="text-sm text-gray-500 mt-1">No panel matches "{panelQuery}". Try a different keyword.</p>
           </div>
         )}
-      </div>
+      </section>
       </div>
     </DashboardLayout>
   );

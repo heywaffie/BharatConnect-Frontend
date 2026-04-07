@@ -6,11 +6,13 @@ import { Plus, MessageSquare, CheckCircle, Clock, AlertTriangle, Megaphone } fro
 import { IssueReportModal } from '../modals/IssueReportModal';
 import { FeedbackModal } from '../modals/FeedbackModal';
 import { LoadingSkeleton } from '../common/LoadingSkeleton';
+import { useLanguage } from '../../context/LanguageContext';
 import { api } from '../../lib/api';
 
 export function CitizenDashboard({ user, onLogout }) {
   const location = useLocation();
   const navigate = useNavigate();
+  const { lang } = useLanguage();
   const [activeTab, setActiveTab] = useState('my-issues');
   const [showIssueModal, setShowIssueModal] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
@@ -147,6 +149,11 @@ export function CitizenDashboard({ user, onLogout }) {
     }
   };
 
+  const formatDate = (value) => new Intl.DateTimeFormat(
+    { EN: 'en-IN', HI: 'hi-IN', TE: 'te-IN', TA: 'ta-IN' }[lang] || 'en-IN',
+    { dateStyle: 'medium' },
+  ).format(new Date(value));
+
   return (
     <DashboardLayout user={user} onLogout={onLogout}>
       <div className="mb-8 flex justify-between items-center">
@@ -233,7 +240,7 @@ export function CitizenDashboard({ user, onLogout }) {
                         {issue.category}
                       </span>
                       <span>{issue.location}</span>
-                      <span>{new Date(issue.date).toLocaleDateString()}</span>
+                      <span>{formatDate(issue.date)}</span>
                     </div>
                   </div>
                   <button
@@ -271,7 +278,7 @@ export function CitizenDashboard({ user, onLogout }) {
                       <h3 className="text-xl font-semibold text-gray-900">{update.title}</h3>
                       <p className="text-sm text-gray-500">by {update.politician}</p>
                     </div>
-                    <span className="text-sm text-gray-500">{new Date(update.date).toLocaleDateString()}</span>
+                    <span className="text-sm text-gray-500">{formatDate(update.date)}</span>
                   </div>
                   <p className="text-gray-700 mt-3">{update.content}</p>
                 </div>

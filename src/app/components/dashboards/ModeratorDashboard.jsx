@@ -4,11 +4,13 @@ import { useLocation, useNavigate } from 'react-router';
 import { DashboardLayout } from './DashboardLayout';
 import { Flag, CheckCircle, XCircle, Eye, AlertTriangle } from 'lucide-react';
 import { LoadingSkeleton } from '../common/LoadingSkeleton';
+import { useLanguage } from '../../context/LanguageContext';
 import { api } from '../../lib/api';
 
 export function ModeratorDashboard({ user, onLogout }) {
   const location = useLocation();
   const navigate = useNavigate();
+  const { lang } = useLanguage();
   const [activeTab, setActiveTab] = useState('flagged');
   const [issues, setIssues] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -78,6 +80,10 @@ export function ModeratorDashboard({ user, onLogout }) {
     { label: 'Resolved', value: issues.filter((i) => i.status === 'resolved').length, icon: XCircle, color: 'bg-red-500' },
     { label: 'Total Actions', value: activityLog.length, icon: Eye, color: 'bg-blue-500' },
   ];
+
+  const locale = { EN: 'en-IN', HI: 'hi-IN', TE: 'te-IN', TA: 'ta-IN' }[lang] || 'en-IN';
+  const formatDate = (value) => new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(new Date(value));
+  const formatDateTime = (value) => new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
 
   return (
     <DashboardLayout user={user} onLogout={onLogout}>
@@ -186,7 +192,7 @@ export function ModeratorDashboard({ user, onLogout }) {
                     </div>
                     <div>
                       <span className="text-gray-500">Date:</span>
-                      <span className="ml-2 text-gray-900 font-medium">{new Date(issue.createdAt).toLocaleDateString()}</span>
+                      <span className="ml-2 text-gray-900 font-medium">{formatDate(issue.createdAt)}</span>
                     </div>
                   </div>
                 </div>
@@ -237,7 +243,7 @@ export function ModeratorDashboard({ user, onLogout }) {
                       </p>
                     </div>
                   </div>
-                  <span className="text-sm text-gray-500">{new Date(activity.time).toLocaleString()}</span>
+                  <span className="text-sm text-gray-500">{formatDateTime(activity.time)}</span>
                 </div>
               </div>
             ))}

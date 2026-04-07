@@ -5,11 +5,13 @@ import { DashboardLayout } from './DashboardLayout';
 import { AlertTriangle, MessageSquare, Send, Megaphone, TrendingUp, Users } from 'lucide-react';
 import { AnnouncementModal } from '../modals/AnnouncementModal';
 import { LoadingSkeleton } from '../common/LoadingSkeleton';
+import { useLanguage } from '../../context/LanguageContext';
 import { api } from '../../lib/api';
 
 export function PoliticianDashboard({ user, onLogout }) {
   const location = useLocation();
   const navigate = useNavigate();
+  const { lang } = useLanguage();
   const [activeTab, setActiveTab] = useState('issues');
   const [showAnnouncementModal, setShowAnnouncementModal] = useState(false);
   const [selectedIssue, setSelectedIssue] = useState(null);
@@ -148,6 +150,9 @@ export function PoliticianDashboard({ user, onLogout }) {
     { label: 'Constituents Reached', value: announcements.reduce((acc, a) => acc + a.views, 0), icon: Users },
   ];
 
+  const locale = { EN: 'en-IN', HI: 'hi-IN', TE: 'te-IN', TA: 'ta-IN' }[lang] || 'en-IN';
+  const formatDate = (value) => new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(new Date(value));
+
   return (
     <DashboardLayout user={user} onLogout={onLogout}>
       <div className="mb-8 flex justify-between items-center">
@@ -262,7 +267,7 @@ export function PoliticianDashboard({ user, onLogout }) {
                       <div key={response.id} className="bg-orange-50 rounded-lg p-4">
                         <div className="flex items-center justify-between mb-2">
                           <span className="font-medium text-gray-900">{response.author}</span>
-                          <span className="text-sm text-[#FF9933]">{new Date(response.date).toLocaleDateString()}</span>
+                          <span className="text-sm text-[#FF9933]">{formatDate(response.date)}</span>
                         </div>
                         <p className="text-gray-700">{response.content}</p>
                       </div>
@@ -330,7 +335,7 @@ export function PoliticianDashboard({ user, onLogout }) {
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">{announcement.title}</h3>
                   <p className="text-gray-600 mb-4">{announcement.content}</p>
                   <div className="flex items-center space-x-6 text-sm text-gray-500">
-                    <span>{new Date(announcement.date).toLocaleDateString()}</span>
+                    <span>{formatDate(announcement.date)}</span>
                     <span className="flex items-center">
                       <Users className="w-4 h-4 mr-1" />
                       {announcement.views} views

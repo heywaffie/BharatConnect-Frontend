@@ -42,7 +42,7 @@ export function DashboardLayout({ user, onLogout, children }) {
       <div style={{ background: 'linear-gradient(to right, #FF9933 0%, #FF9933 33.33%, #ffffff 33.33%, #ffffff 66.67%, #138808 66.67%, #138808 100%)', height: '4px' }} />
 
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
+      <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40" role="banner">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
 
@@ -66,7 +66,7 @@ export function DashboardLayout({ user, onLogout, children }) {
             </div>
 
             {/* Right side */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2" role="navigation" aria-label="Dashboard top controls">
 
               {/* Language selector */}
               <div className="relative">
@@ -99,13 +99,13 @@ export function DashboardLayout({ user, onLogout, children }) {
               </div>
 
               {/* Notifications */}
-              <button className="p-2 rounded-lg text-gray-500 hover:text-[#FF9933] hover:bg-orange-50 transition-colors relative">
+              <button aria-label="Open notifications" className="p-2 rounded-lg text-gray-500 hover:text-[#FF9933] hover:bg-orange-50 transition-colors relative">
                 <Bell className="w-5 h-5" />
                 <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
               </button>
 
               {/* Settings */}
-              <button className="p-2 rounded-lg text-gray-500 hover:text-[#FF9933] hover:bg-orange-50 transition-colors">
+              <button aria-label="Open settings" className="p-2 rounded-lg text-gray-500 hover:text-[#FF9933] hover:bg-orange-50 transition-colors">
                 <Settings className="w-5 h-5" />
               </button>
 
@@ -139,7 +139,7 @@ export function DashboardLayout({ user, onLogout, children }) {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" role="main" aria-label="Dashboard content">
         <div className="cc-page-enter">{children}</div>
       </main>
     </div>
