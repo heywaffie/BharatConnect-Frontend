@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, Navigate } from 'react-router';
-import { Shield, UserRound, Users, Megaphone, Sparkles, Phone, Mail, CircleCheckBig, ChevronRight, Search, SearchX, CheckCircle2, XCircle, Copy } from 'lucide-react';
+import { Shield, UserRound, Users, Megaphone, Sparkles, Phone, Mail, CircleCheckBig, ChevronRight, Search, SearchX, CheckCircle2, XCircle, Copy, Clock3, LockKeyhole, LayoutGrid } from 'lucide-react';
 
 import { DashboardLayout } from '../components/dashboards/DashboardLayout';
 import { SectionHeader } from '../components/common/SectionHeader';
@@ -79,6 +79,19 @@ export function DashboardHome() {
     { label: 'Account Status', value: user.status || 'active' },
   ];
 
+  const lastLoginDisplay = user.lastLoginAt
+    ? new Date(user.lastLoginAt).toLocaleString()
+    : 'First session';
+
+  const buttonBase = 'inline-flex items-center justify-center gap-1.5 rounded-xl px-3.5 py-2.5 text-xs font-semibold transition';
+
+  const roleLegend = [
+    { key: 'citizen', label: 'Citizen', className: 'bg-orange-100 text-[#cc6f1c] border-orange-200' },
+    { key: 'moderator', label: 'Moderator', className: 'bg-blue-100 text-[#1e3a8a] border-blue-200' },
+    { key: 'politician', label: 'Politician', className: 'bg-green-100 text-[#166534] border-green-200' },
+    { key: 'admin', label: 'Admin', className: 'bg-gray-100 text-gray-700 border-gray-200' },
+  ];
+
   useEffect(() => {
     if (!toast) return;
     const timer = setTimeout(() => setToast(null), 2200);
@@ -131,17 +144,18 @@ export function DashboardHome() {
             </p>
           </div>
 
-          <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-4 w-full lg:w-auto lg:min-w-[280px]">
+          <div className="rounded-2xl bg-white/85 backdrop-blur-sm border border-white shadow-sm p-4 w-full lg:w-auto lg:min-w-[280px]">
             <p className="text-xs uppercase tracking-wider text-gray-500 font-semibold mb-3">Profile Snapshot</p>
             <div className="space-y-2.5 text-sm">
               <div className="flex items-center gap-2 text-gray-700"><CircleCheckBig className="w-4 h-4 text-green-600" /> {roleLabel}</div>
               <div className="flex items-center gap-2 text-gray-700"><Mail className="w-4 h-4 text-gray-400" /> {user.email}</div>
               <div className="flex items-center gap-2 text-gray-700"><Phone className="w-4 h-4 text-gray-400" /> {user.phoneNumber || 'Not added'}</div>
+              <div className="flex items-center gap-2 text-gray-700"><Clock3 className="w-4 h-4 text-gray-400" /> {lastLoginDisplay}</div>
             </div>
             <button
               type="button"
               onClick={copyEmail}
-              className="mt-4 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:border-[#FF9933] hover:text-[#FF9933] transition"
+              className={`mt-4 ${buttonBase} border border-gray-200 text-gray-700 hover:border-[#FF9933] hover:text-[#FF9933]`}
             >
               <Copy className="w-3.5 h-3.5" />
               Copy Email
@@ -150,12 +164,60 @@ export function DashboardHome() {
         </div>
       </div>
 
+      <div className="sticky top-20 z-20 mb-6 rounded-2xl border border-gray-100 bg-white/90 backdrop-blur px-3 py-3 shadow-sm">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs font-semibold text-gray-500 mr-1">Quick Actions</span>
+          <Link to="/dashboard" className={`${buttonBase} border border-gray-200 text-gray-700 hover:border-[#FF9933] hover:text-[#FF9933]`}>
+            <LayoutGrid className="w-3.5 h-3.5" /> Refresh Hub
+          </Link>
+          {quickLinks[0] && (
+            <Link to={quickLinks[0].to} className={`${buttonBase} bg-[#FF9933] text-white hover:bg-[#e8871e]`}>
+              Open Primary Panel
+            </Link>
+          )}
+          <button
+            type="button"
+            onClick={copyEmail}
+            className={`${buttonBase} border border-gray-200 text-gray-700 hover:border-[#FF9933] hover:text-[#FF9933]`}
+          >
+            <Copy className="w-3.5 h-3.5" /> Copy Email
+          </button>
+        </div>
+      </div>
+
+      <div className="mb-6 rounded-2xl border border-blue-100 bg-blue-50/60 px-4 py-3 text-sm text-blue-900 flex items-start gap-2">
+        <LockKeyhole className="w-4 h-4 mt-0.5" />
+        Use Google sign-in only on trusted devices. Avoid sharing OTPs or session cookies.
+      </div>
+
+      <div className="mb-6 flex flex-wrap gap-2">
+        <span className="text-xs font-semibold text-gray-500 mr-1 mt-1">Role Legend</span>
+        {roleLegend.map((item) => (
+          <span key={item.key} className={`text-xs px-2.5 py-1 rounded-full border font-semibold ${item.className}`}>
+            {item.label}
+          </span>
+        ))}
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
         {stats.map((item) => (
-          <div key={item.label} className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+          <div key={item.label} className="rounded-2xl border border-white bg-white/85 backdrop-blur-sm p-4 shadow-sm">
             <p className="text-xs uppercase tracking-wide text-gray-500 font-semibold">{item.label}</p>
             <p className="mt-2 text-lg font-bold text-gray-900">{item.value}</p>
           </div>
+        ))}
+      </div>
+
+      <div className="mb-5 flex flex-wrap gap-2">
+        <span className="text-xs font-semibold text-gray-500 mt-1">Shortcuts</span>
+        {quickLinks.map((item) => (
+          <Link
+            key={`shortcut-${item.key}`}
+            to={item.to}
+            className={`${buttonBase} border border-gray-200 text-gray-700 hover:border-[#FF9933] hover:text-[#FF9933]`}
+          >
+            {item.label}
+          </Link>
         ))}
       </div>
 
@@ -178,7 +240,7 @@ export function DashboardHome() {
               <button
                 type="button"
                 onClick={resetSearch}
-                className="rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-xs font-semibold text-gray-700 hover:border-[#FF9933] hover:text-[#FF9933] transition"
+                className={`${buttonBase} border border-gray-200 bg-white text-gray-700 hover:border-[#FF9933] hover:text-[#FF9933]`}
               >
                 Reset
               </button>
@@ -194,7 +256,7 @@ export function DashboardHome() {
             <Link
               key={item.key}
               to={item.to}
-              className="group rounded-2xl bg-white border border-gray-100 shadow-sm p-5 md:p-6 hover:border-[#FF9933] hover:shadow-md hover:-translate-y-0.5 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#FF9933]"
+              className="group rounded-2xl bg-white/85 backdrop-blur-sm border border-white shadow-sm p-5 md:p-6 hover:border-[#FF9933] hover:shadow-md hover:-translate-y-0.5 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#FF9933]"
             >
               <div className="w-12 h-12 rounded-xl bg-orange-100 text-[#FF9933] flex items-center justify-center mb-4">
                 <Icon className="w-6 h-6" />

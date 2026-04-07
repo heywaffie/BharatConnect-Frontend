@@ -13,14 +13,22 @@ export function AuthProvider({ children }) {
     }
   });
 
+  const persistUser = (newUser) => {
+    const withLoginTime = {
+      ...newUser,
+      lastLoginAt: newUser?.lastLoginAt || new Date().toISOString(),
+    };
+    setUser(withLoginTime);
+    localStorage.setItem('cc_user', JSON.stringify(withLoginTime));
+    return withLoginTime;
+  };
+
   const login = async (email, password) => {
     if (!email || !password) {
       throw new Error('Email and password are required.');
     }
     const newUser = await api.auth.login({ email, password });
-    setUser(newUser);
-    localStorage.setItem('cc_user', JSON.stringify(newUser));
-    return newUser;
+    return persistUser(newUser);
   };
 
   const register = async (data) => {
@@ -28,9 +36,7 @@ export function AuthProvider({ children }) {
       throw new Error('All fields are required.');
     }
     const newUser = await api.auth.register(data);
-    setUser(newUser);
-    localStorage.setItem('cc_user', JSON.stringify(newUser));
-    return newUser;
+    return persistUser(newUser);
   };
 
   const googleSignIn = async (idToken) => {
@@ -38,9 +44,7 @@ export function AuthProvider({ children }) {
       throw new Error('Google token is required.');
     }
     const newUser = await api.auth.google({ idToken });
-    setUser(newUser);
-    localStorage.setItem('cc_user', JSON.stringify(newUser));
-    return newUser;
+    return persistUser(newUser);
   };
 
   const completeOnboarding = async (data) => {
@@ -48,9 +52,7 @@ export function AuthProvider({ children }) {
       throw new Error('Email, name, and phone number are required.');
     }
     const newUser = await api.auth.completeOnboarding(data);
-    setUser(newUser);
-    localStorage.setItem('cc_user', JSON.stringify(newUser));
-    return newUser;
+    return persistUser(newUser);
   };
 
   const logout = () => {
