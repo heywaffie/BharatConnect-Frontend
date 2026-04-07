@@ -13,18 +13,18 @@ export function AuthProvider({ children }) {
     }
   });
 
-  const login = async (email, password, role) => {
-    if (!email || !password || !role) {
-      throw new Error('Email, password, and role are required.');
+  const login = async (email, password) => {
+    if (!email || !password) {
+      throw new Error('Email and password are required.');
     }
-    const newUser = await api.auth.login({ email, password, role });
+    const newUser = await api.auth.login({ email, password });
     setUser(newUser);
     localStorage.setItem('cc_user', JSON.stringify(newUser));
     return newUser;
   };
 
   const register = async (data) => {
-    if (!data.name || !data.email || !data.password || !data.role) {
+    if (!data.name || !data.email || !data.password) {
       throw new Error('All fields are required.');
     }
     const newUser = await api.auth.register(data);
@@ -33,12 +33,11 @@ export function AuthProvider({ children }) {
     return newUser;
   };
 
-  const googleSignIn = async (idToken, role) => {
+  const googleSignIn = async (idToken) => {
     if (!idToken) {
       throw new Error('Google token is required.');
     }
-    const body = role ? { idToken, role } : { idToken };
-    const newUser = await api.auth.google(body);
+    const newUser = await api.auth.google({ idToken });
     setUser(newUser);
     localStorage.setItem('cc_user', JSON.stringify(newUser));
     return newUser;

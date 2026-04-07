@@ -16,7 +16,7 @@ export function AdminDashboard({ user, onLogout }) {
     setLoading(true);
     setError('');
     try {
-      const [userList, issueList] = await Promise.all([api.admin.users(), api.issues.all()]);
+      const [userList, issueList] = await Promise.all([api.admin.users(user.email), api.issues.all()]);
       setUsers(Array.isArray(userList) ? userList : []);
       setIssues(Array.isArray(issueList) ? issueList : []);
     } catch (err) {
@@ -32,9 +32,9 @@ export function AdminDashboard({ user, onLogout }) {
 
   const stats = useMemo(() => [
     { label: 'Total Users', value: String(users.length), icon: Users, color: 'bg-blue-500' },
-    { label: 'Active Issues', value: String(issues.filter((i) => i.status !== 'resolved').length), icon: AlertTriangle, color: 'bg-yellow-500' },
-    { label: 'Resolved Issues', value: String(issues.filter((i) => i.status === 'resolved').length), icon: CheckCircle, color: 'bg-green-500' },
-    { label: 'Suspended Users', value: String(users.filter((u) => u.status === 'suspended').length), icon: XCircle, color: 'bg-red-500' },
+    { label: 'Active Issues', value: String(issues.filter((i) => String(i.status || '').toLowerCase() !== 'resolved').length), icon: AlertTriangle, color: 'bg-yellow-500' },
+    { label: 'Resolved Issues', value: String(issues.filter((i) => String(i.status || '').toLowerCase() === 'resolved').length), icon: CheckCircle, color: 'bg-green-500' },
+    { label: 'Suspended Users', value: String(users.filter((u) => String(u.status || '').toLowerCase() === 'suspended').length), icon: XCircle, color: 'bg-red-500' },
   ], [issues, users]);
 
   const usersByRole = useMemo(() => {
@@ -44,10 +44,10 @@ export function AdminDashboard({ user, onLogout }) {
     }, {});
 
     return [
-      { name: 'Citizens', value: counts.CITIZEN || 0, color: '#FF9933' },
-      { name: 'Politicians', value: counts.POLITICIAN || 0, color: '#138808' },
-      { name: 'Moderators', value: counts.MODERATOR || 0, color: '#10B981' },
-      { name: 'Admins', value: counts.ADMIN || 0, color: '#EF4444' },
+      { name: 'Citizens', value: counts.citizen || counts.CITIZEN || 0, color: '#FF9933' },
+      { name: 'Politicians', value: counts.politician || counts.POLITICIAN || 0, color: '#138808' },
+      { name: 'Moderators', value: counts.moderator || counts.MODERATOR || 0, color: '#10B981' },
+      { name: 'Admins', value: counts.admin || counts.ADMIN || 0, color: '#EF4444' },
     ];
   }, [users]);
 
@@ -67,7 +67,7 @@ export function AdminDashboard({ user, onLogout }) {
 
       const resolved = issues.filter((issue) => {
         const issueDate = new Date(issue.createdAt);
-        return issue.status === 'resolved' && issueDate.getMonth() === month && issueDate.getFullYear() === year;
+        return String(issue.status || '').toLowerCase() === 'resolved' && issueDate.getMonth() === month && issueDate.getFullYear() === year;
       }).length;
 
       months.push({ month: monthLabel, reported, resolved });
@@ -78,10 +78,10 @@ export function AdminDashboard({ user, onLogout }) {
   const recentActivity = useMemo(() => {
     const entries = issues.slice(0, 8).map((issue) => ({
       id: issue.id,
-      action: issue.status === 'resolved' ? 'Issue resolved' : 'Issue reported',
+      action: String(issue.status || '').toLowerCase() === 'resolved' ? 'Issue resolved' : 'Issue reported',
       user: issue.reporter?.name || 'Unknown user',
       time: issue.createdAt,
-      type: issue.status === 'resolved' ? 'issue-resolved' : 'issue-reported',
+      type: String(issue.status || '').toLowerCase() === 'resolved' ? 'issue-resolved' : 'issue-reported',
     }));
 
     return entries.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
@@ -90,10 +90,19 @@ export function AdminDashboard({ user, onLogout }) {
   const toggleUserStatus = async (userId, status) => {
     try {
       const nextStatus = status === 'active' ? 'suspended' : 'active';
-      await api.admin.updateUserStatus(userId, nextStatus);
+      await api.admin.updateUserStatus(userId, nextStatus, user.email);
       await loadData();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update user status.');
+    }
+  };
+
+  const updateUserRole = async (userId, role) => {
+    try {
+      await api.admin.updateUserRole(userId, role, user.email);
+      await loadData();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update user role.');
     }
   };
 
@@ -210,7 +219,12 @@ export function AdminDashboard({ user, onLogout }) {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {users.map((userData) => (
+                {users.map((userData) => {
+                  const role = String(userData.role || '').toLowerCase();
+                  const status = String(userData.status || '').toLowerCase();
+                  const isFixedAdmin = String(userData.email || '').toLowerCase() === 'ashokvibes@gmail.com';
+
+                  return (
                   <tr key={userData.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
@@ -220,38 +234,52 @@ export function AdminDashboard({ user, onLogout }) {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        userData.role === 'POLITICIAN' ? 'bg-green-100 text-[#138808]' :
-                        userData.role === 'MODERATOR' ? 'bg-green-100 text-green-800' :
-                        userData.role === 'ADMIN' ? 'bg-red-100 text-red-800' :
+                        role === 'politician' ? 'bg-green-100 text-[#138808]' :
+                        role === 'moderator' ? 'bg-green-100 text-green-800' :
+                        role === 'admin' ? 'bg-red-100 text-red-800' :
                         'bg-blue-100 text-blue-800'
                       }`}>
-                        {String(userData.role || '').toLowerCase()}
+                        {role}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        userData.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                        status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                       }`}>
-                        {userData.status}
+                        {status}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(userData.joinedDate).toLocaleDateString()}
+                      {new Date(userData.createdAt).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <button
-                        onClick={() => toggleUserStatus(userData.id, userData.status)}
-                        className={`px-4 py-2 rounded ${
-                          userData.status === 'active'
-                            ? 'bg-red-100 text-red-700 hover:bg-red-200'
-                            : 'bg-green-100 text-green-700 hover:bg-green-200'
-                        }`}
-                      >
-                        {userData.status === 'active' ? 'Suspend' : 'Activate'}
-                      </button>
+                      <div className="flex items-center gap-2">
+                        {!isFixedAdmin && (
+                          <select
+                            value={role}
+                            onChange={(e) => updateUserRole(userData.id, e.target.value)}
+                            className="px-2 py-1 border border-gray-200 rounded text-xs"
+                          >
+                            <option value="citizen">citizen</option>
+                            <option value="moderator">moderator</option>
+                            <option value="politician">politician</option>
+                          </select>
+                        )}
+                        <button
+                          onClick={() => toggleUserStatus(userData.id, status)}
+                          disabled={isFixedAdmin}
+                          className={`px-4 py-2 rounded ${
+                            status === 'active'
+                              ? 'bg-red-100 text-red-700 hover:bg-red-200'
+                              : 'bg-green-100 text-green-700 hover:bg-green-200'
+                          } disabled:opacity-50 disabled:cursor-not-allowed`}
+                        >
+                          {status === 'active' ? 'Suspend' : 'Activate'}
+                        </button>
+                      </div>
                     </td>
                   </tr>
-                ))}
+                );})}
                 {users.length === 0 && (
                   <tr>
                     <td colSpan={5} className="px-6 py-10 text-center text-sm text-gray-500">

@@ -32,6 +32,9 @@ public class AuthController {
     @Value("${app.google.client-id:}")
     private String googleClientId;
 
+    @Value("${app.admin.email:ashokvibes@gmail.com}")
+    private String adminEmail;
+
     @PostMapping("/register")
     public AuthResponse register(@Valid @RequestBody RegisterRequest request) {
         userRepository.findByEmailIgnoreCase(request.email()).ifPresent(existing -> {
@@ -42,7 +45,7 @@ public class AuthController {
                 .name(request.name())
                 .email(request.email())
                 .password(request.password())
-                .role(toRole(request.role()))
+            .role(resolveRoleByEmail(request.email()))
                 .status(UserStatus.ACTIVE)
             .onboardingCompleted(false)
                 .createdAt(LocalDateTime.now())
@@ -56,12 +59,18 @@ public class AuthController {
         AppUser user = userRepository.findByEmailIgnoreCase(request.email())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials."));
 
-        if (!user.getPassword().equals(request.password()) || user.getRole() != toRole(request.role())) {
+        if (!user.getPassword().equals(request.password())) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials.");
         }
 
         if (user.getStatus() == UserStatus.SUSPENDED) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Account is suspended.");
+        }
+
+        if (isAdminEmail(user.getEmail()) && user.getRole() != Role.ADMIN) {
+            userRepository.updateRoleByEmail(user.getEmail(), Role.ADMIN.name());
+            user = userRepository.findById(user.getId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found."));
         }
 
         return toAuthResponse(user);
@@ -84,11 +93,14 @@ public class AuthController {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Google email is not verified.");
         }
 
-        Role requestedRole = toRoleOrDefault(request.role());
         AppUser user = userRepository.findByEmailIgnoreCase(tokenInfo.email())
                 .map(existing -> {
                     if (existing.getStatus() == UserStatus.SUSPENDED) {
                         throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Account is suspended.");
+                    }
+                    if (isAdminEmail(existing.getEmail()) && existing.getRole() != Role.ADMIN) {
+                        userRepository.updateRoleByEmail(existing.getEmail(), Role.ADMIN.name());
+                        return userRepository.findById(existing.getId()).orElse(existing);
                     }
                     return existing;
                 })
@@ -96,7 +108,7 @@ public class AuthController {
                         .name(resolveName(tokenInfo))
                         .email(tokenInfo.email())
                         .password("GOOGLE_AUTH_" + UUID.randomUUID())
-                        .role(requestedRole)
+                        .role(resolveRoleByEmail(tokenInfo.email()))
                         .status(UserStatus.ACTIVE)
                         .onboardingCompleted(false)
                         .createdAt(LocalDateTime.now())
@@ -115,7 +127,6 @@ public class AuthController {
         }
 
         user.setName(request.name().trim());
-        user.setRole(toRole(request.role()));
         user.setOnboardingCompleted(true);
 
         return toAuthResponse(userRepository.save(user));
@@ -154,21 +165,12 @@ public class AuthController {
         );
     }
 
-    private Role toRoleOrDefault(String role) {
-        if (role == null || role.isBlank()) {
-            return Role.CITIZEN;
-        }
-        return toRole(role);
+    private Role resolveRoleByEmail(String email) {
+        return isAdminEmail(email) ? Role.ADMIN : Role.CITIZEN;
     }
 
-    private Role toRole(String role) {
-        return switch (role.toLowerCase()) {
-            case "citizen" -> Role.CITIZEN;
-            case "politician" -> Role.POLITICIAN;
-            case "moderator" -> Role.MODERATOR;
-            case "admin" -> Role.ADMIN;
-            default -> throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid role.");
-        };
+    private boolean isAdminEmail(String email) {
+        return email != null && email.trim().equalsIgnoreCase(adminEmail);
     }
 
     private String fromRole(Role role) {

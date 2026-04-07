@@ -47,11 +47,16 @@ export const api = {
     create: (body) => request('/feedback', { method: 'POST', body: JSON.stringify(body) }),
   },
   admin: {
-    users: () => request('/admin/users'),
-    updateUserStatus: (userId, status) =>
-      request(`/admin/users/${userId}/status`, {
+    users: (requesterEmail) => request(`/admin/users?requesterEmail=${encodeURIComponent(requesterEmail)}`),
+    updateUserStatus: (userId, status, requesterEmail) =>
+      request(`/admin/users/${userId}/status?requesterEmail=${encodeURIComponent(requesterEmail)}`, {
         method: 'PATCH',
         body: JSON.stringify({ status }),
+      }),
+    updateUserRole: (userId, role, requesterEmail) =>
+      request(`/admin/users/${userId}/role?requesterEmail=${encodeURIComponent(requesterEmail)}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ role }),
       }),
   },
 };

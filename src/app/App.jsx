@@ -66,6 +66,10 @@ function AppRoutes() {
         }
       />
       <Route
+        path="/politicion"
+        element={<Navigate to="/politician" replace />}
+      />
+      <Route
         path="/moderator"
         element={
           user?.role === 'moderator' && user?.onboardingCompleted !== false ? (
@@ -74,6 +78,10 @@ function AppRoutes() {
             <Navigate to={user ? '/onboarding' : '/signin'} replace />
           )
         }
+      />
+      <Route
+        path="/mod"
+        element={<Navigate to="/moderator" replace />}
       />
 
       {/* Fallback */}

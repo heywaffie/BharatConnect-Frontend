@@ -1,18 +1,11 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router';
-import { Mail, Lock, Eye, EyeOff, User, Users, Shield, Megaphone, AlertCircle } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, User, AlertCircle } from 'lucide-react';
 
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { GoogleSignInButton } from '../../components/auth/GoogleSignInButton';
 import govLogo from '../../../assets/images/government-of-india.jpg';
-
-const ROLE_CONFIGS = [
-  { id: 'citizen',    icon: Users,     color: 'bg-[#FF9933]' },
-  { id: 'politician', icon: Megaphone, color: 'bg-[#138808]' },
-  { id: 'moderator',  icon: Eye,       color: 'bg-[#000080]' },
-  { id: 'admin',      icon: Shield,    color: 'bg-gray-700'  },
-];
 
 export function SignUpPage() {
   const navigate = useNavigate();
@@ -20,9 +13,6 @@ export function SignUpPage() {
   const { t } = useLanguage();
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
-  const ROLES = ROLE_CONFIGS.map((r) => ({ ...r, label: t.auth.roles[r.id] }));
-
-  const [selectedRole, setSelectedRole] = useState(null);
   const [name, setName]               = useState('');
   const [email, setEmail]             = useState('');
   const [password, setPassword]       = useState('');
@@ -37,13 +27,12 @@ export function SignUpPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    if (!selectedRole)        { setError(t.auth.roleError); return; }
     if (password !== confirm) { setError('Passwords do not match.');  return; }
     if (password.length < 6)  { setError('Password must be at least 6 characters.'); return; }
 
     setLoading(true);
     try {
-      const data = { name, email, password, role: selectedRole };
+      const data = { name, email, password };
       const authUser = await register(data);
       navigate(destinationForUser(authUser), { replace: true });
     } catch (err) {
@@ -123,34 +112,6 @@ export function SignUpPage() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-3">
-            {/* Role picker */}
-            <div>
-              <p className="text-xs font-semibold text-gray-600 mb-2">{t.auth.selectRole}</p>
-              <div className="grid grid-cols-4 gap-2">
-                {ROLES.map((r) => {
-                  const Icon = r.icon;
-                  const active = selectedRole === r.id;
-                  return (
-                    <button
-                      key={r.id}
-                      type="button"
-                      onClick={() => setSelectedRole(r.id)}
-                      className={`flex flex-col items-center gap-1 py-2.5 rounded-xl border-2 text-xs font-semibold transition-all ${
-                        active
-                          ? 'border-[#FF9933] bg-orange-50 text-[#FF9933]'
-                          : 'border-gray-100 bg-gray-50 text-gray-500 hover:border-gray-200'
-                      }`}
-                    >
-                      <div className={`w-7 h-7 ${r.color} rounded-lg flex items-center justify-center`}>
-                        <Icon className="w-4 h-4 text-white" />
-                      </div>
-                      {r.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
             {/* Name */}
             <div className="relative">
               <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />

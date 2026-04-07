@@ -1,18 +1,11 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router';
-import { Mail, Lock, Eye, EyeOff, Users, Shield, Megaphone, AlertCircle } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react';
 
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { GoogleSignInButton } from '../../components/auth/GoogleSignInButton';
 import govLogo from '../../../assets/images/government-of-india.jpg';
-
-const ROLE_CONFIGS = [
-  { id: 'citizen',    icon: Users,     color: 'bg-[#FF9933]' },
-  { id: 'politician', icon: Megaphone, color: 'bg-[#138808]' },
-  { id: 'moderator',  icon: Eye,       color: 'bg-[#000080]' },
-  { id: 'admin',      icon: Shield,    color: 'bg-gray-700'  },
-];
 
 export function SignInPage() {
   const navigate = useNavigate();
@@ -20,9 +13,6 @@ export function SignInPage() {
   const { t } = useLanguage();
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
-  const ROLES = ROLE_CONFIGS.map((r) => ({ ...r, label: t.auth.roles[r.id] }));
-
-  const [selectedRole, setSelectedRole] = useState(null);
   const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
   const [showPw, setShowPw]     = useState(false);
@@ -34,10 +24,9 @@ export function SignInPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    if (!selectedRole) { setError(t.auth.roleError); return; }
     setLoading(true);
     try {
-      const authUser = await login(email, password, selectedRole);
+      const authUser = await login(email, password);
       navigate(destinationForUser(authUser), { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Sign in failed.');
@@ -117,34 +106,6 @@ export function SignInPage() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Role picker */}
-            <div>
-              <p className="text-xs font-semibold text-gray-600 mb-2">{t.auth.selectRole}</p>
-              <div className="grid grid-cols-4 gap-2">
-                {ROLES.map((r) => {
-                  const Icon = r.icon;
-                  const active = selectedRole === r.id;
-                  return (
-                    <button
-                      key={r.id}
-                      type="button"
-                      onClick={() => setSelectedRole(r.id)}
-                      className={`flex flex-col items-center gap-1 py-2.5 rounded-xl border-2 text-xs font-semibold transition-all ${
-                        active
-                          ? 'border-[#FF9933] bg-orange-50 text-[#FF9933]'
-                          : 'border-gray-100 bg-gray-50 text-gray-500 hover:border-gray-200'
-                      }`}
-                    >
-                      <div className={`w-7 h-7 ${r.color} rounded-lg flex items-center justify-center`}>
-                        <Icon className="w-4 h-4 text-white" />
-                      </div>
-                      {r.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
             {/* Email */}
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
