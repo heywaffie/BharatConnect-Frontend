@@ -140,7 +140,7 @@ export function DashboardLayout({ user, onLogout, children }) {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {children}
+        <div className="cc-page-enter">{children}</div>
       </main>
     </div>
   );

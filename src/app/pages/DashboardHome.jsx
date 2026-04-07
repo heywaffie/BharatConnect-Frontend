@@ -278,7 +278,7 @@ export function DashboardHome() {
             </p>
           </div>
 
-          <div className="rounded-2xl bg-white/85 backdrop-blur-sm border border-white shadow-sm p-4 w-full lg:w-auto lg:min-w-[280px]">
+          <div className="cc-card p-4 w-full lg:w-auto lg:min-w-[280px]">
             <p className="text-xs uppercase tracking-wider text-gray-500 font-semibold mb-3">Profile Snapshot</p>
             <div className="space-y-2.5 text-sm">
               <div className="flex items-center gap-2 text-gray-700"><CircleCheckBig className="w-4 h-4 text-green-600" /> {roleLabel}</div>
@@ -373,7 +373,7 @@ export function DashboardHome() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
         {stats.map((item) => (
-          <div key={item.label} className="rounded-2xl border border-white bg-white/85 backdrop-blur-sm p-4 shadow-sm">
+          <div key={item.label} className="cc-card p-4">
             <p className="text-xs uppercase tracking-wide text-gray-500 font-semibold">{item.label}</p>
             <p className="mt-2 text-lg font-bold text-gray-900">{item.value}</p>
           </div>
@@ -428,7 +428,7 @@ export function DashboardHome() {
             <Link
               key={item.key}
               to={item.to}
-              className="group rounded-2xl bg-white/85 backdrop-blur-sm border border-white shadow-sm p-5 md:p-6 hover:border-[#FF9933] hover:shadow-md hover:-translate-y-0.5 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#FF9933]"
+              className="group cc-card cc-hover-lift p-5 md:p-6 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#FF9933]"
             >
               <div className="w-12 h-12 rounded-xl bg-orange-100 text-[#FF9933] flex items-center justify-center mb-4">
                 <Icon className="w-6 h-6" />

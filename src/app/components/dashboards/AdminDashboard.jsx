@@ -177,7 +177,7 @@ export function AdminDashboard({ user, onLogout }) {
             {stats.map((stat) => {
               const Icon = stat.icon;
               return (
-                <div key={stat.label} className="bg-white rounded-lg shadow p-6">
+                <div key={stat.label} className="cc-card p-6">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-gray-600 mb-1">{stat.label}</p>
@@ -193,7 +193,7 @@ export function AdminDashboard({ user, onLogout }) {
           </div>
 
           {/* Recent Activity */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="cc-card p-6">
             <h3 className="text-xl font-semibold mb-4 flex items-center">
               <Activity className="w-5 h-5 mr-2 text-[#FF9933]" />
               Recent Platform Activity
@@ -221,12 +221,71 @@ export function AdminDashboard({ user, onLogout }) {
 
       {/* Users Tab */}
       {activeTab === 'users' && (
-        <div className="bg-white rounded-lg shadow">
+        <div className="cc-card">
           <div className="p-6 border-b border-gray-200">
             <h3 className="text-xl font-semibold">User Management</h3>
             <p className="text-sm text-gray-600 mt-1">Manage user accounts and permissions</p>
           </div>
-          <div className="overflow-x-auto">
+          <div className="md:hidden divide-y divide-gray-100">
+            {users.map((userData) => {
+              const role = String(userData.role || '').toLowerCase();
+              const status = String(userData.status || '').toLowerCase();
+              const isFixedAdmin = String(userData.email || '').toLowerCase() === 'ashokvibes@gmail.com';
+
+              return (
+                <div key={`mobile-${userData.id}`} className="p-4 space-y-3">
+                  <div>
+                    <p className="font-semibold text-gray-900 leading-tight">{userData.name}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">{userData.email}</p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2 text-xs">
+                    <span className={`px-2.5 py-1 rounded-full font-medium ${
+                      role === 'politician' ? 'bg-green-100 text-[#138808]' :
+                      role === 'moderator' ? 'bg-green-100 text-green-800' :
+                      role === 'admin' ? 'bg-red-100 text-red-800' :
+                      'bg-blue-100 text-blue-800'
+                    }`}>
+                      {role}
+                    </span>
+                    <span className={`px-2.5 py-1 rounded-full font-medium ${
+                      status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                    }`}>
+                      {status}
+                    </span>
+                    <span className="text-gray-500">Joined {new Date(userData.createdAt).toLocaleDateString()}</span>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {!isFixedAdmin && (
+                      <select
+                        value={role}
+                        onChange={(e) => updateUserRole(userData.id, e.target.value)}
+                        className="flex-1 min-w-[160px] px-2.5 py-2 border border-gray-200 rounded text-sm"
+                      >
+                        <option value="citizen">citizen</option>
+                        <option value="moderator">moderator</option>
+                        <option value="politician">politician</option>
+                      </select>
+                    )}
+                    <button
+                      onClick={() => toggleUserStatus(userData.id, status)}
+                      disabled={isFixedAdmin}
+                      className={`px-3 py-2 rounded text-sm font-medium ${
+                        status === 'active'
+                          ? 'bg-red-100 text-red-700 hover:bg-red-200'
+                          : 'bg-green-100 text-green-700 hover:bg-green-200'
+                      } disabled:opacity-50 disabled:cursor-not-allowed`}
+                    >
+                      {status === 'active' ? 'Suspend' : 'Activate'}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+            {users.length === 0 && (
+              <div className="px-4 py-10 text-center text-sm text-gray-500">No users found yet.</div>
+            )}
+          </div>
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
@@ -317,7 +376,7 @@ export function AdminDashboard({ user, onLogout }) {
         <div className="space-y-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Users by Role */}
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className="cc-card p-6">
               <h3 className="text-xl font-semibold mb-6">Users by Role</h3>
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
@@ -341,7 +400,7 @@ export function AdminDashboard({ user, onLogout }) {
             </div>
 
             {/* Issues Trend */}
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className="cc-card p-6">
               <h3 className="text-xl font-semibold mb-6">Issues Trend (6 Months)</h3>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={issuesTrend}>
