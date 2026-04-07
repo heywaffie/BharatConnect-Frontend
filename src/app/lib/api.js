@@ -1,5 +1,15 @@
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api').replace(/\/$/, '');
 
+function extractApiError(payload, response) {
+  if (payload && typeof payload === 'object') {
+    return payload.message || payload.error || payload.detail || `Request failed with status ${response.status}`;
+  }
+  if (typeof payload === 'string' && payload.trim()) {
+    return payload;
+  }
+  return `Request failed with status ${response.status}`;
+}
+
 async function request(path, options = {}) {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     headers: {
@@ -10,11 +20,10 @@ async function request(path, options = {}) {
   });
 
   const contentType = response.headers.get('content-type') || '';
-  const payload = contentType.includes('application/json') ? await response.json() : null;
+  const payload = contentType.includes('application/json') ? await response.json() : await response.text();
 
   if (!response.ok) {
-    const message = payload?.message || payload?.error || payload?.detail || `Request failed with status ${response.status}`;
-    throw new Error(message);
+    throw new Error(extractApiError(payload, response));
   }
 
   return payload;

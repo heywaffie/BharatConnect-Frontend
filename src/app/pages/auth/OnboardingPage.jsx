@@ -15,6 +15,14 @@ export function OnboardingPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  const roleHint = user?.role === 'admin'
+    ? 'You have admin privileges. Keep your account secure.'
+    : user?.role === 'moderator'
+      ? 'As moderator, you can review and resolve queue items.'
+      : user?.role === 'politician'
+        ? 'As politician, you can publish announcements and respond to issues.'
+        : 'As citizen, you can report complaints and track updates.';
+
   if (!user) {
     return <Navigate to="/signin" replace />;
   }
@@ -32,8 +40,18 @@ export function OnboardingPage() {
       return;
     }
 
+    if (name.trim().length < 3) {
+      setError('Full name should be at least 3 characters.');
+      return;
+    }
+
     if (!phoneNumber.trim()) {
       setError('Please enter your phone number.');
+      return;
+    }
+
+    if (!/^[0-9+() -]{7,20}$/.test(phoneNumber.trim())) {
+      setError('Phone number is invalid. Use 7-20 digits/chars.');
       return;
     }
 
@@ -66,6 +84,10 @@ export function OnboardingPage() {
             <p className="text-xs text-red-700">{error}</p>
           </div>
         )}
+
+        <div className="rounded-xl border border-blue-100 bg-blue-50/70 px-3 py-2 text-xs text-blue-900">
+          {roleHint}
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="relative">

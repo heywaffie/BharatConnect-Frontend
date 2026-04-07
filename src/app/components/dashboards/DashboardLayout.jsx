@@ -22,6 +22,20 @@ export function DashboardLayout({ user, onLogout, children }) {
     return t.auth.roles[role] || role;
   };
 
+  const getAvatarStyle = (role) => {
+    switch (role) {
+      case 'admin':
+        return { background: '#374151' };
+      case 'moderator':
+        return { background: '#1d4ed8' };
+      case 'politician':
+        return { background: '#138808' };
+      case 'citizen':
+      default:
+        return { background: '#FF9933' };
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Tricolor stripe */}
@@ -99,7 +113,7 @@ export function DashboardLayout({ user, onLogout, children }) {
               <div className="flex items-center gap-2.5 pl-3 border-l border-gray-200 ml-1">
                 <div
                   className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0"
-                  style={{ background: '#FF9933' }}
+                  style={getAvatarStyle(user.role)}
                 >
                   {user.name.charAt(0).toUpperCase()}
                 </div>

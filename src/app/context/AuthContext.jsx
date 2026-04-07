@@ -55,13 +55,26 @@ export function AuthProvider({ children }) {
     return persistUser(newUser);
   };
 
+  const updateProfile = (updates) => {
+    if (!user) {
+      throw new Error('No active user session.');
+    }
+
+    const nextUser = {
+      ...user,
+      ...updates,
+    };
+
+    return persistUser(nextUser);
+  };
+
   const logout = () => {
     setUser(null);
     localStorage.removeItem('cc_user');
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, googleSignIn, completeOnboarding, logout }}>
+    <AuthContext.Provider value={{ user, login, register, googleSignIn, completeOnboarding, updateProfile, logout }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,18 +1,22 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, Navigate } from 'react-router';
-import { Shield, UserRound, Users, Megaphone, Sparkles, Phone, Mail, CircleCheckBig, ChevronRight, Search, SearchX, CheckCircle2, XCircle, Copy, Clock3, LockKeyhole, LayoutGrid } from 'lucide-react';
+import { Shield, UserRound, Users, Megaphone, Sparkles, Phone, Mail, CircleCheckBig, ChevronRight, Search, SearchX, CheckCircle2, XCircle, Copy, Clock3, LockKeyhole, LayoutGrid, UserPen } from 'lucide-react';
 
 import { DashboardLayout } from '../components/dashboards/DashboardLayout';
 import { SectionHeader } from '../components/common/SectionHeader';
 import { useAuth } from '../context/AuthContext';
 
 export function DashboardHome() {
-  const { user, logout } = useAuth();
+  const { user, updateProfile, logout } = useAuth();
   const [panelQuery, setPanelQuery] = useState(() => localStorage.getItem('cc_dashboard_panel_query') || '');
   const [toast, setToast] = useState(null);
   const [compactMode, setCompactMode] = useState(() => localStorage.getItem('cc_dashboard_compact') === '1');
   const [highContrast, setHighContrast] = useState(() => localStorage.getItem('cc_dashboard_contrast') === '1');
   const [isOffline, setIsOffline] = useState(() => typeof navigator !== 'undefined' && navigator.onLine === false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [profileName, setProfileName] = useState(user?.name || '');
+  const [profilePhone, setProfilePhone] = useState(user?.phoneNumber || '');
+  const [profileError, setProfileError] = useState('');
 
   if (!user) {
     return <Navigate to="/signin" replace />;
@@ -158,9 +162,73 @@ export function DashboardHome() {
     });
   };
 
+  const openProfileModal = () => {
+    setProfileName(user?.name || '');
+    setProfilePhone(user?.phoneNumber || '');
+    setProfileError('');
+    setShowProfileModal(true);
+  };
+
+  const saveProfile = () => {
+    const trimmedName = profileName.trim();
+    const trimmedPhone = profilePhone.trim();
+
+    if (trimmedName.length < 3) {
+      setProfileError('Full name should be at least 3 characters.');
+      return;
+    }
+
+    if (trimmedPhone && !/^[0-9+() -]{7,20}$/.test(trimmedPhone)) {
+      setProfileError('Phone number format is invalid. Use 7-20 digits/chars.');
+      return;
+    }
+
+    updateProfile({ name: trimmedName, phoneNumber: trimmedPhone });
+    setShowProfileModal(false);
+    showToast('success', 'Profile updated successfully');
+  };
+
   return (
     <DashboardLayout user={user} onLogout={logout}>
       <div className={`${highContrast ? 'contrast-125 saturate-50' : ''} ${compactMode ? 'space-y-4' : 'space-y-6'}`}>
+      {showProfileModal && (
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+          <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white shadow-xl p-6 space-y-4">
+            <h3 className="text-lg font-bold text-gray-900">Edit Profile</h3>
+
+            {profileError && (
+              <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+                {profileError}
+              </div>
+            )}
+
+            <div className="space-y-3">
+              <input
+                value={profileName}
+                onChange={(e) => setProfileName(e.target.value)}
+                placeholder="Full name"
+                className="w-full rounded-xl border border-gray-200 bg-white py-2.5 px-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FF9933]/30 focus:border-[#FF9933]"
+              />
+              <input
+                value={profilePhone}
+                onChange={(e) => setProfilePhone(e.target.value)}
+                placeholder="Phone number"
+                className="w-full rounded-xl border border-gray-200 bg-white py-2.5 px-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FF9933]/30 focus:border-[#FF9933]"
+              />
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <button type="button" onClick={() => setShowProfileModal(false)} className={`${buttonBase} border border-gray-200 text-gray-700 hover:border-[#FF9933] hover:text-[#FF9933]`}>
+                Cancel
+              </button>
+              <button type="button" onClick={saveProfile} className={`${buttonBase} bg-[#FF9933] text-white hover:bg-[#e8871e]`}>
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {toast && (
         <div className="fixed top-20 right-4 z-50">
           <div className={`min-w-[220px] max-w-sm rounded-xl border px-4 py-3 shadow-lg text-sm font-medium flex items-center gap-2 ${
@@ -230,6 +298,13 @@ export function DashboardHome() {
             className={`${buttonBase} border border-gray-200 text-gray-700 hover:border-[#FF9933] hover:text-[#FF9933]`}
           >
             <Copy className="w-3.5 h-3.5" /> Copy Email
+          </button>
+          <button
+            type="button"
+            onClick={openProfileModal}
+            className={`${buttonBase} border border-gray-200 text-gray-700 hover:border-[#FF9933] hover:text-[#FF9933]`}
+          >
+            <UserPen className="w-3.5 h-3.5" /> Edit Profile
           </button>
           <button
             type="button"
