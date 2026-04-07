@@ -1,4 +1,5 @@
 import { createContext, useContext, useState } from 'react';
+import { api } from '../lib/api';
 
 const AuthContext = createContext(null);
 
@@ -16,18 +17,7 @@ export function AuthProvider({ children }) {
     if (!email || !password || !role) {
       throw new Error('Email, password, and role are required.');
     }
-    // Mock auth — replace with real API call in production
-    const displayName = email
-      .split('@')[0]
-      .replace(/[._]/g, ' ')
-      .replace(/\b\w/g, (c) => c.toUpperCase());
-
-    const newUser = {
-      id: Math.random().toString(36).slice(2, 11),
-      name: displayName,
-      email,
-      role,
-    };
+    const newUser = await api.auth.login({ email, password, role });
     setUser(newUser);
     localStorage.setItem('cc_user', JSON.stringify(newUser));
   };
@@ -36,12 +26,7 @@ export function AuthProvider({ children }) {
     if (!data.name || !data.email || !data.password || !data.role) {
       throw new Error('All fields are required.');
     }
-    const newUser = {
-      id: Math.random().toString(36).slice(2, 11),
-      name: data.name,
-      email: data.email,
-      role: data.role,
-    };
+    const newUser = await api.auth.register(data);
     setUser(newUser);
     localStorage.setItem('cc_user', JSON.stringify(newUser));
   };

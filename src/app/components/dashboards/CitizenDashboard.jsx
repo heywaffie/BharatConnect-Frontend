@@ -1,89 +1,109 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { DashboardLayout } from './DashboardLayout';
 import { Plus, MessageSquare, CheckCircle, Clock, AlertTriangle, Megaphone } from 'lucide-react';
 import { IssueReportModal } from '../modals/IssueReportModal';
 import { FeedbackModal } from '../modals/FeedbackModal';
+import { api } from '../../lib/api';
 
 export function CitizenDashboard({ user, onLogout }) {
   const [activeTab, setActiveTab] = useState('my-issues');
   const [showIssueModal, setShowIssueModal] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [submittingIssue, setSubmittingIssue] = useState(false);
+  const [submittingFeedback, setSubmittingFeedback] = useState(false);
 
-  const [issues, setIssues] = useState([
-    {
-      id: '1',
-      title: 'Broken streetlight on Main Street',
-      description: 'The streetlight near the park has been out for 2 weeks',
-      category: 'Infrastructure',
-      status: 'in-progress',
-      date: '2024-02-15',
-      location: 'Main Street & Park Ave',
-      upvotes: 24,
-    },
-    {
-      id: '2',
-      title: 'Pothole on Highway 101',
-      description: 'Large pothole causing traffic issues',
-      category: 'Roads',
-      status: 'pending',
-      date: '2024-02-20',
-      location: 'Highway 101, Mile 15',
-      upvotes: 45,
-    },
-    {
-      id: '3',
-      title: 'Park maintenance needed',
-      description: 'Playground equipment needs repairs',
-      category: 'Parks',
-      status: 'resolved',
-      date: '2024-01-28',
-      location: 'Central Park',
-      upvotes: 18,
-    },
-  ]);
+  const [issues, setIssues] = useState([]);
+  const [updates, setUpdates] = useState([]);
 
-  const updates = [
-    {
-      id: '1',
-      politician: 'Mayor Johnson',
-      title: 'New Community Center Opening',
-      content: 'We are excited to announce the opening of the new community center on March 15th. This facility will serve as a hub for local events and activities.',
-      date: '2024-02-20',
-    },
-    {
-      id: '2',
-      politician: 'Council Member Smith',
-      title: 'Road Improvement Project Update',
-      content: 'The road improvement project on Highway 101 is progressing well. We expect completion by end of March.',
-      date: '2024-02-18',
-    },
-    {
-      id: '3',
-      politician: 'Mayor Johnson',
-      title: 'Town Hall Meeting Scheduled',
-      content: 'Join us for our quarterly town hall meeting on March 1st at 7 PM. We will discuss upcoming projects and answer your questions.',
-      date: '2024-02-15',
-    },
-  ];
+  const formatIssue = (issue) => ({
+    id: String(issue.id),
+    title: issue.title,
+    description: issue.description,
+    category: issue.category,
+    status: issue.status.toLowerCase().replace('_', '-'),
+    date: issue.createdAt,
+    location: issue.location,
+    upvotes: issue.upvotes,
+  });
 
-  const handleIssueSubmit = (issueData) => {
-    const newIssue = {
-      ...issueData,
-      id: Math.random().toString(36).substr(2, 9),
-      date: new Date().toISOString().split('T')[0],
-      upvotes: 0,
+  const formatAnnouncement = (announcement) => ({
+    id: String(announcement.id),
+    politician: announcement.authorName,
+    title: announcement.title,
+    content: announcement.content,
+    date: announcement.createdAt,
+  });
+
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      setError('');
+      try {
+        const [myIssues, announcements] = await Promise.all([
+          api.issues.mine(user.email),
+          api.announcements.all(),
+        ]);
+        setIssues(myIssues.map(formatIssue));
+        setUpdates(announcements.map(formatAnnouncement));
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load dashboard data.');
+      } finally {
+        setLoading(false);
+      }
     };
-    setIssues([newIssue, ...issues]);
-    setShowIssueModal(false);
+
+    loadData();
+  }, [user.email]);
+
+  const handleIssueSubmit = async (issueData) => {
+    setSubmittingIssue(true);
+    try {
+      const created = await api.issues.create({
+        title: issueData.title,
+        description: issueData.description,
+        category: issueData.category,
+        location: issueData.location,
+        reporterEmail: user.email,
+      });
+      setIssues((prev) => [formatIssue(created), ...prev]);
+      setShowIssueModal(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to submit issue.');
+    } finally {
+      setSubmittingIssue(false);
+    }
   };
 
-  const handleUpvote = (issueId) => {
-    setIssues(issues.map(issue =>
-      issue.id === issueId
-        ? { ...issue, upvotes: issue.upvotes + 1 }
-        : issue
-    ));
+  const handleUpvote = async (issueId) => {
+    try {
+      const updated = await api.issues.upvote(issueId);
+      setIssues((prev) => prev.map((issue) =>
+        issue.id === String(updated.id) ? formatIssue(updated) : issue
+      ));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to upvote issue.');
+    }
+  };
+
+  const handleFeedbackSubmit = async (feedbackData) => {
+    setSubmittingFeedback(true);
+    try {
+      await api.feedback.create({
+        rating: feedbackData.rating,
+        feedback: feedbackData.feedback,
+        category: feedbackData.category,
+        authorName: user.name,
+        email: user.email,
+      });
+      setShowFeedbackModal(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to submit feedback.');
+    } finally {
+      setSubmittingFeedback(false);
+    }
   };
 
   const getStatusColor = (status) => {
@@ -129,13 +149,20 @@ export function CitizenDashboard({ user, onLogout }) {
           </button>
           <button
             onClick={() => setShowIssueModal(true)}
-            className="px-4 py-2 bg-[#FF9933] text-white rounded-lg hover:bg-[#e8871e] transition-colors flex items-center"
+            className="px-4 py-2 bg-[#FF9933] text-white rounded-lg hover:bg-[#e8871e] transition-colors flex items-center disabled:opacity-60"
+            disabled={submittingIssue}
           >
             <Plus className="w-5 h-5 mr-2" />
             Report Issue
           </button>
         </div>
       </div>
+
+      {error && (
+        <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="flex space-x-4 mb-8 border-b border-gray-200">
@@ -164,6 +191,12 @@ export function CitizenDashboard({ user, onLogout }) {
       {/* My Issues Tab */}
       {activeTab === 'my-issues' && (
         <div className="space-y-4">
+          {loading && (
+            <div className="bg-white rounded-lg shadow p-6 text-gray-600">Loading your issues...</div>
+          )}
+          {!loading && issues.length === 0 && (
+            <div className="bg-white rounded-lg shadow p-6 text-gray-600">No issues yet. Report your first issue.</div>
+          )}
           {issues.map((issue) => {
             const StatusIcon = getStatusIcon(issue.status);
             return (
@@ -204,6 +237,12 @@ export function CitizenDashboard({ user, onLogout }) {
       {/* Updates Tab */}
       {activeTab === 'updates' && (
         <div className="space-y-6">
+          {loading && (
+            <div className="bg-white rounded-lg shadow p-6 text-gray-600">Loading announcements...</div>
+          )}
+          {!loading && updates.length === 0 && (
+            <div className="bg-white rounded-lg shadow p-6 text-gray-600">No announcements available yet.</div>
+          )}
           {updates.map((update) => (
             <div key={update.id} className="bg-white rounded-lg shadow p-6 hover:shadow-md transition-shadow">
               <div className="flex items-start space-x-4">
@@ -231,12 +270,15 @@ export function CitizenDashboard({ user, onLogout }) {
         <IssueReportModal
           onClose={() => setShowIssueModal(false)}
           onSubmit={handleIssueSubmit}
+          isSubmitting={submittingIssue}
         />
       )}
 
       {showFeedbackModal && (
         <FeedbackModal
           onClose={() => setShowFeedbackModal(false)}
+          onSubmit={handleFeedbackSubmit}
+          isSubmitting={submittingFeedback}
         />
       )}
     </DashboardLayout>

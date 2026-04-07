@@ -15,7 +15,7 @@ const ROLE_CONFIGS = [
 
 export function SignUpPage() {
   const navigate = useNavigate();
-  const { register, login } = useAuth();
+  const { register } = useAuth();
   const { t } = useLanguage();
 
   const ROLES = ROLE_CONFIGS.map((r) => ({ ...r, label: t.auth.roles[r.id] }));
@@ -49,17 +49,8 @@ export function SignUpPage() {
     }
   };
 
-  const handleDebugSkip = async () => {
-    try {
-      await login('test@citizenconnect.app', 'testuser', 'citizen');
-      navigate('/citizen', { replace: true });
-    } catch {
-      // ignore
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,#fff7ed_0%,#f8fafc_45%,#eef2ff_100%)] flex items-center justify-center p-4">
       <div className="w-full max-w-md">
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 space-y-5">
@@ -205,15 +196,6 @@ export function SignUpPage() {
             </button>
           </form>
 
-          {/* Debug Skip */}
-          <button
-            type="button"
-            onClick={handleDebugSkip}
-            className="w-full py-2.5 rounded-xl border border-dashed border-gray-200 text-gray-400 text-xs font-medium hover:border-[#FF9933]/40 hover:text-[#FF9933]/60 transition-colors flex items-center justify-center gap-1.5"
-          >
-            {t.auth.debugSkip} → TestUser (citizen)
-          </button>
-
           {/* Sign in link */}
           <p className="text-center text-sm text-gray-500">
             {t.auth.hasAccount}{' '}
@@ -222,7 +204,9 @@ export function SignUpPage() {
             </Link>
           </p>
 
-          <p className="text-center text-[10px] text-gray-300">{t.auth.demo}</p>
+          <div className="rounded-xl border border-blue-100 bg-blue-50/70 p-3 text-xs text-blue-900">
+            New accounts are saved in the backend instantly and can sign in from any browser.
+          </div>
         </div>
 
         <p className="text-center mt-4 text-xs text-gray-400">

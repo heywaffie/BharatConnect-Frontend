@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { X, Megaphone, FileText } from 'lucide-react';
 
-export function AnnouncementModal({ onClose }) {
+export function AnnouncementModal({ onClose, onSubmit, isSubmitting = false }) {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [category, setCategory] = useState('');
@@ -15,12 +15,10 @@ export function AnnouncementModal({ onClose }) {
     'Project Update',
   ];
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (title && content && category) {
-      // In a real app, this would submit to backend
-      alert('Announcement published successfully');
-      onClose();
+      await onSubmit({ title, content, category });
     }
   };
 
@@ -48,6 +46,7 @@ export function AnnouncementModal({ onClose }) {
               <input
                 type="text"
                 required
+                disabled={isSubmitting}
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
@@ -65,6 +64,7 @@ export function AnnouncementModal({ onClose }) {
               <Megaphone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
               <select
                 required
+                disabled={isSubmitting}
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent appearance-none"
@@ -86,6 +86,7 @@ export function AnnouncementModal({ onClose }) {
             </label>
             <textarea
               required
+              disabled={isSubmitting}
               value={content}
               onChange={(e) => setContent(e.target.value)}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
@@ -102,16 +103,18 @@ export function AnnouncementModal({ onClose }) {
             <button
               type="button"
               onClick={onClose}
+              disabled={isSubmitting}
               className="px-6 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center"
+              disabled={isSubmitting}
+              className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center disabled:opacity-60"
             >
               <Megaphone className="w-4 h-4 mr-2" />
-              Publish Announcement
+              {isSubmitting ? 'Publishing...' : 'Publish Announcement'}
             </button>
           </div>
         </form>

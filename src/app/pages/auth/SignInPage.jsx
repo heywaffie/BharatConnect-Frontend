@@ -42,17 +42,8 @@ export function SignInPage() {
     }
   };
 
-  const handleDebugSkip = async () => {
-    try {
-      await login('test@citizenconnect.app', 'testuser', 'citizen');
-      navigate('/citizen', { replace: true });
-    } catch {
-      // ignore
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,#fff7ed_0%,#f8fafc_45%,#eef2ff_100%)] flex items-center justify-center p-4">
       <div className="w-full max-w-md">
 
         {/* Card */}
@@ -166,15 +157,6 @@ export function SignInPage() {
             </button>
           </form>
 
-          {/* Debug Skip */}
-          <button
-            type="button"
-            onClick={handleDebugSkip}
-            className="w-full py-2.5 rounded-xl border border-dashed border-gray-200 text-gray-400 text-xs font-medium hover:border-[#FF9933]/40 hover:text-[#FF9933]/60 transition-colors flex items-center justify-center gap-1.5"
-          >
-            {t.auth.debugSkip} → TestUser (citizen)
-          </button>
-
           {/* Sign up link */}
           <p className="text-center text-sm text-gray-500">
             {t.auth.noAccount}{' '}
@@ -183,7 +165,6 @@ export function SignInPage() {
             </Link>
           </p>
 
-          <p className="text-center text-[10px] text-gray-300">{t.auth.demo}</p>
         </div>
 
         {/* Back to home */}

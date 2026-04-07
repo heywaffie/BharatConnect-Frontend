@@ -1,50 +1,100 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { DashboardLayout } from './DashboardLayout';
 import { Users, Shield, Activity, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { api } from '../../lib/api';
 
 export function AdminDashboard({ user, onLogout }) {
   const [activeTab, setActiveTab] = useState('overview');
+  const [users, setUsers] = useState([]);
+  const [issues, setIssues] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  // Mock data
-  const stats = [
-    { label: 'Total Users', value: '1,234', icon: Users, color: 'bg-blue-500' },
-    { label: 'Active Issues', value: '87', icon: AlertTriangle, color: 'bg-yellow-500' },
-    { label: 'Resolved Issues', value: '456', icon: CheckCircle, color: 'bg-green-500' },
-    { label: 'Reports Flagged', value: '12', icon: XCircle, color: 'bg-red-500' },
-  ];
+  const loadData = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const [userList, issueList] = await Promise.all([api.admin.users(), api.issues.all()]);
+      setUsers(Array.isArray(userList) ? userList : []);
+      setIssues(Array.isArray(issueList) ? issueList : []);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load admin dashboard data.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const usersByRole = [
-    { name: 'Citizens', value: 980, color: '#FF9933' },
-    { name: 'Politicians', value: 45, color: '#138808' },
-    { name: 'Moderators', value: 25, color: '#10B981' },
-    { name: 'Admins', value: 5, color: '#EF4444' },
-  ];
+  useEffect(() => {
+    loadData();
+  }, []);
 
-  const issuesTrend = [
-    { month: 'Jan', reported: 65, resolved: 58 },
-    { month: 'Feb', reported: 78, resolved: 70 },
-    { month: 'Mar', reported: 90, resolved: 85 },
-    { month: 'Apr', reported: 81, resolved: 78 },
-    { month: 'May', reported: 95, resolved: 88 },
-    { month: 'Jun', reported: 87, resolved: 82 },
-  ];
+  const stats = useMemo(() => [
+    { label: 'Total Users', value: String(users.length), icon: Users, color: 'bg-blue-500' },
+    { label: 'Active Issues', value: String(issues.filter((i) => i.status !== 'resolved').length), icon: AlertTriangle, color: 'bg-yellow-500' },
+    { label: 'Resolved Issues', value: String(issues.filter((i) => i.status === 'resolved').length), icon: CheckCircle, color: 'bg-green-500' },
+    { label: 'Suspended Users', value: String(users.filter((u) => u.status === 'suspended').length), icon: XCircle, color: 'bg-red-500' },
+  ], [issues, users]);
 
-  const [users, setUsers] = useState([
-    { id: '1', name: 'John Doe', email: 'john@example.com', role: 'Citizen', status: 'active', joinedDate: '2024-01-15' },
-    { id: '2', name: 'Sarah Smith', email: 'sarah@example.com', role: 'Politician', status: 'active', joinedDate: '2024-02-20' },
-    { id: '3', name: 'Mike Johnson', email: 'mike@example.com', role: 'Moderator', status: 'active', joinedDate: '2024-03-10' },
-    { id: '4', name: 'Emily Davis', email: 'emily@example.com', role: 'Citizen', status: 'suspended', joinedDate: '2024-01-22' },
-    { id: '5', name: 'Robert Wilson', email: 'robert@example.com', role: 'Citizen', status: 'active', joinedDate: '2024-04-05' },
-  ]);
+  const usersByRole = useMemo(() => {
+    const counts = users.reduce((acc, current) => {
+      acc[current.role] = (acc[current.role] || 0) + 1;
+      return acc;
+    }, {});
 
-  const toggleUserStatus = (userId) => {
-    setUsers(users.map(u => 
-      u.id === userId 
-        ? { ...u, status: u.status === 'active' ? 'suspended' : 'active' }
-        : u
-    ));
+    return [
+      { name: 'Citizens', value: counts.CITIZEN || 0, color: '#FF9933' },
+      { name: 'Politicians', value: counts.POLITICIAN || 0, color: '#138808' },
+      { name: 'Moderators', value: counts.MODERATOR || 0, color: '#10B981' },
+      { name: 'Admins', value: counts.ADMIN || 0, color: '#EF4444' },
+    ];
+  }, [users]);
+
+  const issuesTrend = useMemo(() => {
+    const months = [];
+    const now = new Date();
+    for (let i = 5; i >= 0; i -= 1) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const monthLabel = date.toLocaleString(undefined, { month: 'short' });
+      const month = date.getMonth();
+      const year = date.getFullYear();
+
+      const reported = issues.filter((issue) => {
+        const issueDate = new Date(issue.createdAt);
+        return issueDate.getMonth() === month && issueDate.getFullYear() === year;
+      }).length;
+
+      const resolved = issues.filter((issue) => {
+        const issueDate = new Date(issue.createdAt);
+        return issue.status === 'resolved' && issueDate.getMonth() === month && issueDate.getFullYear() === year;
+      }).length;
+
+      months.push({ month: monthLabel, reported, resolved });
+    }
+    return months;
+  }, [issues]);
+
+  const recentActivity = useMemo(() => {
+    const entries = issues.slice(0, 8).map((issue) => ({
+      id: issue.id,
+      action: issue.status === 'resolved' ? 'Issue resolved' : 'Issue reported',
+      user: issue.reporter?.name || 'Unknown user',
+      time: issue.createdAt,
+      type: issue.status === 'resolved' ? 'issue-resolved' : 'issue-reported',
+    }));
+
+    return entries.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
+  }, [issues]);
+
+  const toggleUserStatus = async (userId, status) => {
+    try {
+      const nextStatus = status === 'active' ? 'suspended' : 'active';
+      await api.admin.updateUserStatus(userId, nextStatus);
+      await loadData();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update user status.');
+    }
   };
 
   return (
@@ -91,6 +141,9 @@ export function AdminDashboard({ user, onLogout }) {
       {/* Overview Tab */}
       {activeTab === 'overview' && (
         <div className="space-y-8">
+          {loading && <div className="bg-white rounded-lg shadow p-4 text-sm text-gray-500">Loading dashboard data...</div>}
+          {error && <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-sm text-red-700">{error}</div>}
+
           {/* Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {stats.map((stat) => {
@@ -118,28 +171,21 @@ export function AdminDashboard({ user, onLogout }) {
               Recent Platform Activity
             </h3>
             <div className="space-y-3">
-              {[
-                { action: 'New user registered', user: 'Alice Brown', time: '5 minutes ago', type: 'user' },
-                { action: 'Issue reported', user: 'John Doe', time: '15 minutes ago', type: 'issue' },
-                { action: 'User suspended', user: 'Admin action', time: '1 hour ago', type: 'admin' },
-                { action: 'New politician joined', user: 'David Lee', time: '2 hours ago', type: 'user' },
-                { action: 'Issue resolved', user: 'Sarah Smith', time: '3 hours ago', type: 'issue' },
-              ].map((activity, index) => (
-                <div key={index} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
+              {recentActivity.map((activity) => (
+                <div key={activity.id} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
                   <div className="flex items-center">
                     <div className={`w-2 h-2 rounded-full mr-3 ${
-                      activity.type === 'user' ? 'bg-blue-500' :
-                      activity.type === 'issue' ? 'bg-yellow-500' :
-                      'bg-red-500'
+                      activity.type === 'issue-reported' ? 'bg-yellow-500' : 'bg-green-500'
                     }`}></div>
                     <div>
                       <p className="font-medium text-gray-900">{activity.action}</p>
                       <p className="text-sm text-gray-500">{activity.user}</p>
                     </div>
                   </div>
-                  <span className="text-sm text-gray-500">{activity.time}</span>
+                  <span className="text-sm text-gray-500">{new Date(activity.time).toLocaleString()}</span>
                 </div>
               ))}
+              {recentActivity.length === 0 && <p className="text-sm text-gray-500">No activity available yet.</p>}
             </div>
           </div>
         </div>
@@ -174,11 +220,12 @@ export function AdminDashboard({ user, onLogout }) {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        userData.role === 'Politician' ? 'bg-green-100 text-[#138808]' :
-                        userData.role === 'Moderator' ? 'bg-green-100 text-green-800' :
+                        userData.role === 'POLITICIAN' ? 'bg-green-100 text-[#138808]' :
+                        userData.role === 'MODERATOR' ? 'bg-green-100 text-green-800' :
+                        userData.role === 'ADMIN' ? 'bg-red-100 text-red-800' :
                         'bg-blue-100 text-blue-800'
                       }`}>
-                        {userData.role}
+                        {String(userData.role || '').toLowerCase()}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -193,7 +240,7 @@ export function AdminDashboard({ user, onLogout }) {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       <button
-                        onClick={() => toggleUserStatus(userData.id)}
+                        onClick={() => toggleUserStatus(userData.id, userData.status)}
                         className={`px-4 py-2 rounded ${
                           userData.status === 'active'
                             ? 'bg-red-100 text-red-700 hover:bg-red-200'
@@ -205,6 +252,13 @@ export function AdminDashboard({ user, onLogout }) {
                     </td>
                   </tr>
                 ))}
+                {users.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-10 text-center text-sm text-gray-500">
+                      No users found yet.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>

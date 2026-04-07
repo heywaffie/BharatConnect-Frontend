@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { X, MapPin, Tag, FileText } from 'lucide-react';
 
-export function IssueReportModal({ onClose, onSubmit }) {
+export function IssueReportModal({ onClose, onSubmit, isSubmitting = false }) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('');
@@ -18,10 +18,10 @@ export function IssueReportModal({ onClose, onSubmit }) {
     'Other',
   ];
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (title && description && category && location) {
-      onSubmit({
+      await onSubmit({
         title,
         description,
         category,
@@ -55,6 +55,7 @@ export function IssueReportModal({ onClose, onSubmit }) {
               <input
                 type="text"
                 required
+                disabled={isSubmitting}
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
@@ -72,6 +73,7 @@ export function IssueReportModal({ onClose, onSubmit }) {
               <Tag className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
               <select
                 required
+                disabled={isSubmitting}
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent appearance-none"
@@ -96,6 +98,7 @@ export function IssueReportModal({ onClose, onSubmit }) {
               <input
                 type="text"
                 required
+                disabled={isSubmitting}
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
@@ -111,6 +114,7 @@ export function IssueReportModal({ onClose, onSubmit }) {
             </label>
             <textarea
               required
+              disabled={isSubmitting}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
@@ -124,15 +128,17 @@ export function IssueReportModal({ onClose, onSubmit }) {
             <button
               type="button"
               onClick={onClose}
+              disabled={isSubmitting}
               className="px-6 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+              disabled={isSubmitting}
+              className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-60"
             >
-              Submit Issue
+              {isSubmitting ? 'Submitting...' : 'Submit Issue'}
             </button>
           </div>
         </form>

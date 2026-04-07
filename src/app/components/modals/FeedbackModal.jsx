@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { X, MessageSquare, Star } from 'lucide-react';
 
-export function FeedbackModal({ onClose }) {
+export function FeedbackModal({ onClose, onSubmit, isSubmitting = false }) {
   const [rating, setRating] = useState(0);
   const [feedback, setFeedback] = useState('');
   const [category, setCategory] = useState('');
@@ -15,11 +15,10 @@ export function FeedbackModal({ onClose }) {
     'Other',
   ];
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // In a real app, this would submit to backend
-    alert('Thank you for your feedback');
-    onClose();
+    if (!rating) return;
+    await onSubmit({ rating, feedback, category });
   };
 
   return (
@@ -46,6 +45,7 @@ export function FeedbackModal({ onClose }) {
                 <button
                   key={star}
                   type="button"
+                  disabled={isSubmitting}
                   onClick={() => setRating(star)}
                   className="focus:outline-none transition-transform hover:scale-110"
                 >
@@ -68,6 +68,7 @@ export function FeedbackModal({ onClose }) {
             </label>
             <select
               required
+              disabled={isSubmitting}
               value={category}
               onChange={(e) => setCategory(e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
@@ -90,6 +91,7 @@ export function FeedbackModal({ onClose }) {
               <MessageSquare className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
               <textarea
                 required
+                disabled={isSubmitting}
                 value={feedback}
                 onChange={(e) => setFeedback(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
@@ -104,15 +106,17 @@ export function FeedbackModal({ onClose }) {
             <button
               type="button"
               onClick={onClose}
+              disabled={isSubmitting}
               className="px-6 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+              disabled={isSubmitting || !rating}
+              className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-60"
             >
-              Submit Feedback
+              {isSubmitting ? 'Submitting...' : 'Submit Feedback'}
             </button>
           </div>
         </form>

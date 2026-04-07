@@ -1,123 +1,116 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { DashboardLayout } from './DashboardLayout';
 import { AlertTriangle, MessageSquare, Send, Megaphone, TrendingUp, Users } from 'lucide-react';
 import { AnnouncementModal } from '../modals/AnnouncementModal';
+import { api } from '../../lib/api';
 
 export function PoliticianDashboard({ user, onLogout }) {
   const [activeTab, setActiveTab] = useState('issues');
   const [showAnnouncementModal, setShowAnnouncementModal] = useState(false);
   const [selectedIssue, setSelectedIssue] = useState(null);
   const [responseText, setResponseText] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [submittingAnnouncement, setSubmittingAnnouncement] = useState(false);
 
-  const [issues, setIssues] = useState([
-    {
-      id: '1',
-      title: 'Broken streetlight on Main Street',
-      description: 'The streetlight near the park has been out for 2 weeks',
-      category: 'Infrastructure',
-      citizen: 'John Doe',
-      status: 'in-progress',
-      date: '2024-02-15',
-      location: 'Main Street & Park Ave',
-      upvotes: 24,
-      responses: [
-        {
-          id: 'r1',
-          author: 'Mayor Johnson',
-          content: 'Thank you for reporting this. We have contacted the maintenance team and they will fix it by end of week.',
-          date: '2024-02-16',
-        },
-      ],
-    },
-    {
-      id: '2',
-      title: 'Pothole on Highway 101',
-      description: 'Large pothole causing traffic issues',
-      category: 'Roads',
-      citizen: 'Sarah Smith',
-      status: 'pending',
-      date: '2024-02-20',
-      location: 'Highway 101, Mile 15',
-      upvotes: 45,
-      responses: [],
-    },
-    {
-      id: '3',
-      title: 'Need more public parking downtown',
-      description: 'Downtown area needs additional parking facilities',
-      category: 'Transportation',
-      citizen: 'Mike Johnson',
-      status: 'pending',
-      date: '2024-02-19',
-      location: 'Downtown District',
-      upvotes: 67,
-      responses: [],
-    },
-    {
-      id: '4',
-      title: 'Park maintenance needed',
-      description: 'Playground equipment needs repairs',
-      category: 'Parks',
-      citizen: 'Emily Davis',
-      status: 'resolved',
-      date: '2024-01-28',
-      location: 'Central Park',
-      upvotes: 18,
-      responses: [
-        {
-          id: 'r2',
-          author: 'Council Member Smith',
-          content: 'The playground equipment has been repaired. Thank you for bringing this to our attention.',
-          date: '2024-02-05',
-        },
-      ],
-    },
-  ]);
+  const [issues, setIssues] = useState([]);
+  const [announcements, setAnnouncements] = useState([]);
 
-  const [announcements] = useState([
-    {
-      id: '1',
-      title: 'New Community Center Opening',
-      content: 'We are excited to announce the opening of the new community center on March 15th.',
-      date: '2024-02-20',
-      views: 234,
-      reactions: 45,
-    },
-    {
-      id: '2',
-      title: 'Road Improvement Project Update',
-      content: 'The road improvement project on Highway 101 is progressing well.',
-      date: '2024-02-18',
-      views: 189,
-      reactions: 32,
-    },
-  ]);
+  const formatIssue = (issue) => ({
+    id: String(issue.id),
+    title: issue.title,
+    description: issue.description,
+    category: issue.category,
+    citizen: issue.reporter?.name || 'Citizen',
+    status: issue.status.toLowerCase().replace('_', '-'),
+    date: issue.createdAt,
+    location: issue.location,
+    upvotes: issue.upvotes,
+    responses: (issue.responses || []).map((response) => ({
+      id: String(response.id),
+      author: response.authorName,
+      content: response.message,
+      date: response.createdAt,
+    })),
+  });
 
-  const handleStatusChange = (issueId, newStatus) => {
-    setIssues(issues.map(issue =>
-      issue.id === issueId ? { ...issue, status: newStatus } : issue
-    ));
-  };
+  const formatAnnouncement = (announcement) => ({
+    id: String(announcement.id),
+    title: announcement.title,
+    content: announcement.content,
+    date: announcement.createdAt,
+    views: 0,
+    reactions: 0,
+    author: announcement.authorName,
+  });
 
-  const handleAddResponse = (issueId) => {
-    if (!responseText.trim()) return;
-
-    const newResponse = {
-      id: Math.random().toString(36).substr(2, 9),
-      author: user.name,
-      content: responseText,
-      date: new Date().toISOString().split('T')[0],
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      setError('');
+      try {
+        const [allIssues, allAnnouncements] = await Promise.all([
+          api.issues.all(),
+          api.announcements.all(),
+        ]);
+        setIssues(allIssues.map(formatIssue));
+        setAnnouncements(allAnnouncements.map(formatAnnouncement));
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load dashboard data.');
+      } finally {
+        setLoading(false);
+      }
     };
 
-    setIssues(issues.map(issue =>
-      issue.id === issueId
-        ? { ...issue, responses: [...issue.responses, newResponse] }
-        : issue
-    ));
+    loadData();
+  }, []);
 
-    setResponseText('');
-    setSelectedIssue(null);
+  const handleStatusChange = async (issueId, newStatus) => {
+    try {
+      const updated = await api.issues.updateStatus(issueId, newStatus);
+      setIssues((prev) => prev.map((issue) =>
+        issue.id === String(updated.id) ? formatIssue(updated) : issue
+      ));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update issue status.');
+    }
+  };
+
+  const handleAddResponse = async (issueId) => {
+    if (!responseText.trim()) return;
+
+    try {
+      const updated = await api.issues.addResponse(issueId, {
+        message: responseText,
+        authorName: user.name,
+      });
+      setIssues((prev) => prev.map((issue) =>
+        issue.id === String(updated.id) ? formatIssue(updated) : issue
+      ));
+      setResponseText('');
+      setSelectedIssue(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to add response.');
+    }
+  };
+
+  const handleCreateAnnouncement = async (announcementData) => {
+    setSubmittingAnnouncement(true);
+    try {
+      const created = await api.announcements.create({
+        title: announcementData.title,
+        content: announcementData.content,
+        category: announcementData.category,
+        authorName: user.name,
+      });
+      setAnnouncements((prev) => [formatAnnouncement(created), ...prev]);
+      setShowAnnouncementModal(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to publish announcement.');
+    } finally {
+      setSubmittingAnnouncement(false);
+    }
   };
 
   const getStatusColor = (status) => {
@@ -155,6 +148,12 @@ export function PoliticianDashboard({ user, onLogout }) {
           New Announcement
         </button>
       </div>
+
+      {error && (
+        <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -201,6 +200,12 @@ export function PoliticianDashboard({ user, onLogout }) {
       {/* Issues Tab */}
       {activeTab === 'issues' && (
         <div className="space-y-6">
+          {loading && (
+            <div className="bg-white rounded-lg shadow p-6 text-gray-600">Loading citizen issues...</div>
+          )}
+          {!loading && issues.length === 0 && (
+            <div className="bg-white rounded-lg shadow p-6 text-gray-600">No citizen issues available right now.</div>
+          )}
           {issues.map((issue) => (
             <div key={issue.id} className="bg-white rounded-lg shadow p-6">
               <div className="flex justify-between items-start mb-4">
@@ -296,6 +301,12 @@ export function PoliticianDashboard({ user, onLogout }) {
       {/* Announcements Tab */}
       {activeTab === 'announcements' && (
         <div className="space-y-6">
+          {loading && (
+            <div className="bg-white rounded-lg shadow p-6 text-gray-600">Loading announcements...</div>
+          )}
+          {!loading && announcements.length === 0 && (
+            <div className="bg-white rounded-lg shadow p-6 text-gray-600">No announcements published yet.</div>
+          )}
           {announcements.map((announcement) => (
             <div key={announcement.id} className="bg-white rounded-lg shadow p-6">
               <div className="flex items-start justify-between">
@@ -321,7 +332,11 @@ export function PoliticianDashboard({ user, onLogout }) {
       )}
 
       {showAnnouncementModal && (
-        <AnnouncementModal onClose={() => setShowAnnouncementModal(false)} />
+        <AnnouncementModal
+          onClose={() => setShowAnnouncementModal(false)}
+          onSubmit={handleCreateAnnouncement}
+          isSubmitting={submittingAnnouncement}
+        />
       )}
     </DashboardLayout>
   );

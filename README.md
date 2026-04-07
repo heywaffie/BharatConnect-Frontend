@@ -49,3 +49,24 @@ We built CitizenConnect with the Indian citizen in mind:
     📱 Built for Bharat — fast, accessible, works on any device
 
 
+  ## Local Development
+
+  ### Frontend
+
+  ```bash
+  npm install
+  cp .env.example .env
+  npm run dev
+  ```
+
+  ### Backend (Spring Boot)
+
+  ```bash
+  cd backend
+  mvn spring-boot:run
+  ```
+
+  Backend base URL: `http://localhost:8080`
+  Backend health endpoint: `GET /api/health`
+
+
