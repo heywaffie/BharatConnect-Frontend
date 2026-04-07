@@ -120,7 +120,15 @@ public class AuthController {
     @PostMapping("/onboarding")
     public AuthResponse completeOnboarding(@Valid @RequestBody CompleteOnboardingRequest request) {
         AppUser user = userRepository.findByEmailIgnoreCase(request.email())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found."));
+            .orElseGet(() -> userRepository.save(AppUser.builder()
+                .name(request.name().trim())
+                .email(request.email().trim())
+                .password("ONBOARDING_AUTH_" + UUID.randomUUID())
+                .role(resolveRoleByEmail(request.email()))
+                .status(UserStatus.ACTIVE)
+                .onboardingCompleted(false)
+                .createdAt(LocalDateTime.now())
+                .build()));
 
         if (user.getStatus() == UserStatus.SUSPENDED) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Account is suspended.");

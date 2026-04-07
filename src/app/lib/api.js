@@ -13,7 +13,7 @@ async function request(path, options = {}) {
   const payload = contentType.includes('application/json') ? await response.json() : null;
 
   if (!response.ok) {
-    const message = payload?.message || `Request failed with status ${response.status}`;
+    const message = payload?.message || payload?.error || payload?.detail || `Request failed with status ${response.status}`;
     throw new Error(message);
   }
 
