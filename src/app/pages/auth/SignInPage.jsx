@@ -4,6 +4,7 @@ import { Mail, Lock, Eye, EyeOff, Users, Shield, Megaphone, AlertCircle } from '
 
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
+import { GoogleSignInButton } from '../../components/auth/GoogleSignInButton';
 import govLogo from '../../../assets/images/government-of-india.jpg';
 
 const ROLE_CONFIGS = [
@@ -15,8 +16,9 @@ const ROLE_CONFIGS = [
 
 export function SignInPage() {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, googleSignIn } = useAuth();
   const { t } = useLanguage();
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
   const ROLES = ROLE_CONFIGS.map((r) => ({ ...r, label: t.auth.roles[r.id] }));
 
@@ -42,6 +44,23 @@ export function SignInPage() {
     }
   };
 
+  const handleGoogleCredential = async (credential) => {
+    setError('');
+    if (!selectedRole) {
+      setError(t.auth.roleError);
+      return;
+    }
+    setLoading(true);
+    try {
+      await googleSignIn(credential, selectedRole);
+      navigate(`/${selectedRole}`, { replace: true });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Google Sign-In failed.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,#fff7ed_0%,#f8fafc_45%,#eef2ff_100%)] flex items-center justify-center p-4">
       <div className="w-full max-w-md">
@@ -52,26 +71,36 @@ export function SignInPage() {
           {/* Logo + Title */}
           <div className="flex flex-col items-center gap-3 text-center">
             <div className="w-16 h-16 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center overflow-hidden p-1">
-              <img src={govLogo} alt="CitizenConnect" className="w-full h-full object-contain" />
+              <img src={govLogo} alt="BharatLink" className="w-full h-full object-contain" />
             </div>
             <div>
-              <h1 className="text-xl font-extrabold text-gray-900">CitizenConnect</h1>
+              <h1 className="text-xl font-extrabold text-gray-900">BharatLink</h1>
               <p className="text-sm text-gray-500 mt-0.5">{t.auth.siSub}</p>
             </div>
           </div>
 
-          {/* Google button (Coming Soon) */}
-          <div className="relative pt-3">
-            <span className="absolute -top-0 left-1/2 -translate-x-1/2 text-[10px] font-bold bg-amber-100 text-amber-700 border border-amber-200 px-2.5 py-0.5 rounded-full whitespace-nowrap">
-              {t.auth.comingSoon}
-            </span>
-            <button
-              disabled
-              className="w-full flex items-center justify-center gap-3 py-2.5 px-4 rounded-xl border border-gray-200 bg-gray-50 text-gray-400 text-sm font-semibold cursor-not-allowed opacity-60"
-            >
-              <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5 h-5" alt="" />
-              {t.auth.google}
-            </button>
+          <div className="pt-2">
+            {googleClientId ? (
+              <GoogleSignInButton
+                clientId={googleClientId}
+                disabled={loading}
+                onCredential={handleGoogleCredential}
+                onError={(err) => setError(err instanceof Error ? err.message : 'Google Sign-In unavailable.')}
+              />
+            ) : (
+              <div className="relative pt-3">
+                <span className="absolute -top-0 left-1/2 -translate-x-1/2 text-[10px] font-bold bg-amber-100 text-amber-700 border border-amber-200 px-2.5 py-0.5 rounded-full whitespace-nowrap">
+                  Set VITE_GOOGLE_CLIENT_ID
+                </span>
+                <button
+                  disabled
+                  className="w-full flex items-center justify-center gap-3 py-2.5 px-4 rounded-xl border border-gray-200 bg-gray-50 text-gray-400 text-sm font-semibold cursor-not-allowed opacity-60"
+                >
+                  <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5 h-5" alt="" />
+                  {t.auth.google}
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Divider */}

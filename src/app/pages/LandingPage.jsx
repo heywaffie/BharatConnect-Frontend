@@ -142,7 +142,7 @@ export function LandingPage() {
             </div>
             <div className="flex flex-col leading-none">
               <span className="text-[#FF9933] font-extrabold tracking-wide text-base">
-                CitizenConnect
+                BharatLink
               </span>
               <span className="text-white/40 text-[9px] tracking-[0.2em] uppercase font-medium">
                 {t.nav.tagline}
@@ -453,7 +453,7 @@ export function LandingPage() {
           <div className="max-w-5xl mx-auto px-4 flex flex-col items-center gap-4">
             <div className="flex items-center gap-3">
               <img src={govLogo} alt="" className="w-8 h-8 object-contain" />
-              <span className="text-gray-500 font-bold text-sm tracking-wide">CitizenConnect</span>
+              <span className="text-gray-500 font-bold text-sm tracking-wide">BharatLink</span>
             </div>
             <div className="tricolor-bar h-px w-24 opacity-60" />
             <p className="text-gray-400 text-xs text-center leading-relaxed">

@@ -31,13 +31,22 @@ export function AuthProvider({ children }) {
     localStorage.setItem('cc_user', JSON.stringify(newUser));
   };
 
+  const googleSignIn = async (idToken, role) => {
+    if (!idToken || !role) {
+      throw new Error('Google token and role are required.');
+    }
+    const newUser = await api.auth.google({ idToken, role });
+    setUser(newUser);
+    localStorage.setItem('cc_user', JSON.stringify(newUser));
+  };
+
   const logout = () => {
     setUser(null);
     localStorage.removeItem('cc_user');
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout }}>
+    <AuthContext.Provider value={{ user, login, register, googleSignIn, logout }}>
       {children}
     </AuthContext.Provider>
   );

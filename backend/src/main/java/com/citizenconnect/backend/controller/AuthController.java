@@ -1,19 +1,25 @@
 package com.citizenconnect.backend.controller;
 
 import com.citizenconnect.backend.dto.auth.AuthResponse;
+import com.citizenconnect.backend.dto.auth.GoogleAuthRequest;
 import com.citizenconnect.backend.dto.auth.LoginRequest;
 import com.citizenconnect.backend.dto.auth.RegisterRequest;
 import com.citizenconnect.backend.entity.AppUser;
 import com.citizenconnect.backend.entity.Role;
 import com.citizenconnect.backend.entity.UserStatus;
 import com.citizenconnect.backend.repository.UserRepository;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -21,6 +27,9 @@ import java.time.LocalDateTime;
 public class AuthController {
 
     private final UserRepository userRepository;
+
+    @Value("${app.google.client-id:}")
+    private String googleClientId;
 
     @PostMapping("/register")
     public AuthResponse register(@Valid @RequestBody RegisterRequest request) {
@@ -56,6 +65,69 @@ public class AuthController {
         return toAuthResponse(user);
     }
 
+    @PostMapping("/google")
+    public AuthResponse googleLogin(@Valid @RequestBody GoogleAuthRequest request) {
+        if (googleClientId == null || googleClientId.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Google login is not configured.");
+        }
+
+        GoogleTokenInfo tokenInfo = verifyGoogleToken(request.idToken());
+        if (tokenInfo == null || tokenInfo.email() == null || tokenInfo.email().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid Google token.");
+        }
+        if (!googleClientId.equals(tokenInfo.aud())) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Google token audience mismatch.");
+        }
+        if (!"true".equalsIgnoreCase(tokenInfo.emailVerified())) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Google email is not verified.");
+        }
+
+        Role requestedRole = toRole(request.role());
+        AppUser user = userRepository.findByEmailIgnoreCase(tokenInfo.email())
+                .map(existing -> {
+                    if (existing.getRole() != requestedRole) {
+                        throw new ResponseStatusException(HttpStatus.CONFLICT,
+                                "This email is already registered with a different role.");
+                    }
+                    if (existing.getStatus() == UserStatus.SUSPENDED) {
+                        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Account is suspended.");
+                    }
+                    return existing;
+                })
+                .orElseGet(() -> userRepository.save(AppUser.builder()
+                        .name(resolveName(tokenInfo))
+                        .email(tokenInfo.email())
+                        .password("GOOGLE_AUTH_" + UUID.randomUUID())
+                        .role(requestedRole)
+                        .status(UserStatus.ACTIVE)
+                        .createdAt(LocalDateTime.now())
+                        .build()));
+
+        return toAuthResponse(user);
+    }
+
+    private GoogleTokenInfo verifyGoogleToken(String idToken) {
+        String url = "https://oauth2.googleapis.com/tokeninfo?id_token=" + idToken;
+        try {
+            RestTemplate restTemplate = new RestTemplate();
+            return restTemplate.getForObject(url, GoogleTokenInfo.class);
+        } catch (RestClientException ex) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid Google token.");
+        }
+    }
+
+    private String resolveName(GoogleTokenInfo tokenInfo) {
+        if (tokenInfo.name() != null && !tokenInfo.name().isBlank()) {
+            return tokenInfo.name();
+        }
+        String email = tokenInfo.email();
+        if (email == null || email.isBlank()) {
+            return "Google User";
+        }
+        int atIndex = email.indexOf('@');
+        return atIndex > 0 ? email.substring(0, atIndex) : email;
+    }
+
     private AuthResponse toAuthResponse(AppUser user) {
         return new AuthResponse(
                 user.getId(),
@@ -78,5 +150,13 @@ public class AuthController {
 
     private String fromRole(Role role) {
         return role.name().toLowerCase();
+    }
+
+    private record GoogleTokenInfo(
+            String aud,
+            String email,
+            String name,
+            @JsonProperty("email_verified") String emailVerified
+    ) {
     }
 }

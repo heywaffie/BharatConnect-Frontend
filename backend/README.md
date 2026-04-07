@@ -1,6 +1,6 @@
-# CitizenConnect Backend (Spring Boot)
+# BharatLink Backend (Spring Boot)
 
-This folder contains a Spring Boot backend for the CitizenConnect frontend.
+This folder contains a Spring Boot backend for the BharatLink frontend.
 
 ## Stack
 

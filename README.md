@@ -6,11 +6,11 @@
 
 Every election season, politicians make promises. Citizens raise problems. And somewhere between the rally speeches and the bureaucratic paperwork — the actual conversation never happens.
 
-That's the gap we're trying to close with CitizenConnect.
+That's the gap we're trying to close with BharatLink.
 
 Vercel: https://citizen-connect-alpha.vercel.app/
 
-Github: https://github.com/LunoXD/CitizenConnect
+Github: https://github.com/LunoXD/BharatLink
 The Problem Nobody Talks About
 
 Democracy isn't broken. But the communication layer of democracy is.
@@ -20,7 +20,7 @@ Think about it. When was the last time you, as a regular citizen, had a direct l
 Most people haven't. And that's the problem.
 What We Built
 
-CitizenConnect is a civic engagement platform built for India — for every state, every language, every citizen.
+BharatLink is a civic engagement platform built for India — for every state, every language, every citizen.
 
 Here's how it works:
 
@@ -41,7 +41,7 @@ India is the world's largest democracy — 1.4 billion people, 22 official langu
 
 And yet most civic tech is built in English, for English speakers, with Western UX assumptions.
 
-We built CitizenConnect with the Indian citizen in mind:
+We built BharatLink with the Indian citizen in mind:
 
     🇮🇳 10 Indian languages — Hindi, Telugu, Tamil, Kannada, Malayalam, Bengali, Marathi, Gujarati, Punjabi, and English — switchable from the navbar, changing every single word on the platform instantly
     🟠 Saffron, White, and Green — the UI breathes the Indian flag

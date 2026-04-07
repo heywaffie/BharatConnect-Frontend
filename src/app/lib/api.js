@@ -24,6 +24,7 @@ export const api = {
   auth: {
     login: (body) => request('/auth/login', { method: 'POST', body: JSON.stringify(body) }),
     register: (body) => request('/auth/register', { method: 'POST', body: JSON.stringify(body) }),
+    google: (body) => request('/auth/google', { method: 'POST', body: JSON.stringify(body) }),
   },
   issues: {
     mine: (email) => request(`/issues/mine?email=${encodeURIComponent(email)}`),
