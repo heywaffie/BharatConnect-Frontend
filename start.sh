@@ -30,7 +30,7 @@ cleanup() {
 
 trap cleanup INT TERM EXIT
 
-echo "Starting backend on http://localhost:8080 ..."
+echo "Starting backend on http://localhost:8081 ..."
 (
   cd "$BACKEND_DIR" || exit 1
   mvn spring-boot:run
